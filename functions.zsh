@@ -1,0 +1,1 @@
+# ~/.shell/functions.zsh

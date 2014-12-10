@@ -1,0 +1,157 @@
+directory structure
+===================
+
+This document describles the directory layout of the shell-utils project installation.
+
+Overview
+--------
+
+```
+~/.shell
+	|___ rc/		# source entry directory, this directory is generated
+	|___ skel/		# shell-utils manager
+	|___ doc/		# documentation
+	|___ bin/		# this path will add to the PATH variable
+	|___ src/		# source code for libs and plugins
+	|___ lib/		# library stuff used by plugin manager and dependencies
+	|___ opt/		# plugins would be here
+	|___ var/		# data files
+	|___ core/		# source this directory unconditionally
+	|___ ext/		# extension utils
+	|___ tool/		# tools used for generate docs, check codes, etc.
+	|___ bkp/		# files backup
+	|___ test/		# test suits
+	|___ custom/	# customize script
+```
+
+Treeview
+--------
+
+```
+~/.shell
+    |
+    |___ rc/        # source entry directory
+    |
+    |___ skel/      # shell-utils manager
+    |     |
+    |     |___ skel.pl	# package manager
+    |
+    |___ doc/       # documentation
+    |     |
+    |     |___ man    # man doc
+    |     |
+    |     |___ rst    # reStructure Text
+    |     |
+    |     |___ pdf    # pdf format
+    |
+    |___ bin/       # this path will add to the PATH variable
+    |     |
+    |     |___ Makefile # Makefile used to control compile and update
+    |
+    |___ src/       # source code for libs and plugins
+    |
+    |___ lib/       # library stuff used by plugin manager and dependencies
+    |     |
+    |     |___ color
+    |
+    |___ opt/       # plugins would be here
+    |     |
+    |     |___ hello  # template files
+    |
+    |___ custom/    # customize script
+    |     |
+    |     |___ prompt     # these files are not updated
+    |
+    |___ var/       # data files
+    |     |
+    |     |___ etc/   # switches, constants, etc.
+    |     |
+    |     |___ log/   # log files
+    |
+    |___ core/      # source this directory unconditionally
+    |
+    |___ ext/       # extension utils
+    |     |
+    |     |___ misc   # misc
+    |
+    |___ tool/      # tools used for generate docs, check codes, etc.
+    |     |
+    |     |___ install.sh		# install script
+    |     |
+    |     |___ bootstrap.sh	# bootstrap script
+    |
+    |___ test/      # test suits
+```
+
+Specific Directory
+------------------
+
+###`doc`
+
+tree view
+
+```
+doc/
+ |
+ |____ man/		# man pages
+ |		|
+ |		|____ skel.1	# man page for the skel package manager
+ |
+ |____ dev/		# develop manaual
+ |		|
+ |		|____ overview	# overview of the design of the shell-utils
+ |		|
+ |		|____ install	# introduction to the install script under `tool`
+ |		|
+ |		|____ infrastucture	# overview of the directory layout of shell-utils
+ |
+ |____ pdf/		# pdf format files
+```
+
+###`var`
+
+This directory contains the data files used by the shell-utils
+
+A tree view should look like this:
+
+```
+var/
+ |
+ |____ log/	# log files
+ |		 |
+ |		 |___ install.log	# installation log file
+ |		 |
+ |		 |___ skel.log	# skel package manager log file
+ |		 |
+ |		 |___ run.log	# runtime errors log to here
+ |
+ |____ db/		# database files
+ |		 |
+ |		 |___ skel.db	# database file for the skel package manager
+ |		 |
+ |		 |___ define.db	# database file for the define online translator
+ |
+ |____ bkp/		# backups
+ 		 |
+ 		 |___ bashrc	# original bashrc
+ 		 |
+ 		 |___ zshrc		# original zshrc
+```
+
+###`custom`
+
+This directory is preserved for the personal stuff here, such as prompt, paths, etc.
+
+A suggestion layout is below:
+
+```
+custom/
+	|
+	|____ aliases.sh	# personal aliases, such as alias password='123456'
+	|
+	|____ prompt.sh		# shell prompt setup, such as PS1~3, precmd, preexec, etc.
+	|
+	|____ paths.sh		# path component to add to the `PATH` variable
+	|
+	|____ switch.sh		# switches, such as set, shopt, HISTIGNORE goes here
+```

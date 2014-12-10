@@ -1,0 +1,20 @@
+#
+# Check if a login was requested by a ssh. If this is
+# true and a locale was provided by the ssh the variable
+# SSH_SENDS_LOCALE is set to yes and will be exported
+# to all sub shells and processes.
+#
+if ( ${?SSH_CONNECTION} ) then
+    set val=0
+    foreach lc (LANG LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE	    \
+		LC_MONETARY LC_MESSAGES LC_PAPER LC_NAME LC_ADDRESS \
+		LC_TELEPHONE LC_MEASUREMENT LC_IDENTIFICATION LC_ALL)
+	eval set val=\${\?$lc}
+	if ( $val != 0 ) then
+	    setenv SSH_SENDS_LOCALE yes
+	    unset lc val
+	    break
+	endif
+    end
+    unset lc val
+endif

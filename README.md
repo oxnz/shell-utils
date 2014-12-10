@@ -66,6 +66,7 @@ Uninstall
 Infrastructure
 --------------
 
+```
 ~/.shell
 	|___ rc/		# source entry directory, this directory is generated
 	|___ skel/		# shell-utils manager
@@ -82,6 +83,7 @@ Infrastructure
 	|___ custom/	# customize script
 	|___ .git/		# git directory
 	|___ .gitignore	# ignore the .git and custom directory
+```
 
 For more details, please see doc/infrastructure
 

@@ -27,12 +27,14 @@ the `.shell` directory under your $HOME.
 
 1. Clone the repository:
 
-	git clone https://github.com/oxnz/shell-utils.git ~/.shell
+`git clone https://github.com/oxnz/shell-utils.git ~/.shell`
 
 2. Source bootstrap file in the dot-shrc file:
 
-	echo '. ~/.shell/bootstrap.sh' >> ~/.bashrc
-	echo '. ~/.shell/bootstrap.sh' >> ~/.zshrc
+```
+echo '. ~/.shell/bootstrap.sh' >> ~/.bashrc
+echo '. ~/.shell/bootstrap.sh' >> ~/.zshrc
+```
 
 3. Already done, just open a new terminal and testing the amazing stuff.
 
@@ -47,21 +49,21 @@ Update
 There's two strategies for update:
 
 * manually:
-
+```
 	skel update
-
+```
 * automatically:
 
-	skel set autoupdate=true
+`skel set autoupdate=true`
 
 If you don't want check upgrade automatically:
 
-	skel set autoupdate=false
+`skel set autoupdate=false`
 
 Uninstall
 ---------
 
-	skel destroy
+`skel destroy`
 
 Infrastructure
 --------------

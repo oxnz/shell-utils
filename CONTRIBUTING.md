@@ -15,5 +15,5 @@ Normally, all pull requests must include regression tests (see Note-testsuite) t
 
 In the licensing header at the beginning of any files you change, please make sure the listed date range includes the current year. For example, if it's 2014, and you change a Shell-utils file that was created in 2010, it should begin:
 
-	# Copyright 2010-2014 The Rust Project Developers.
+> Copyright 2010-2014 The Shell-utils Project Developers.
 

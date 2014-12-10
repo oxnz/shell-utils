@@ -1,0 +1,189 @@
+#!/usr/bin/env sh
+#
+# ===============================================================
+#
+# Filename: install.sh
+#
+# Author:       Oxnz
+# Email:        yunxinyi@gmail.com
+# Created:      [2014-12-09 19:11:50 CST]
+# Last-update:  2014-12-09 19:11:50 CST
+# Description:  ANCHOR
+#
+# Version:		0.0.1
+# Revision:	[None]
+# Revision history:	[None]
+# Date Author Remarks:	[None]
+#
+# License:
+# Copyright (c) 2013 Oxnz
+#
+# Distributed under terms of the [LICENSE] license.
+# [license]
+#
+# ===============================================================
+#
+
+set -e
+
+PROGNAME='INSTALL'
+# version info, ref: http://semver.org
+MAJORVER='0'
+MINORVER='1'
+PATCHVER='0'
+RELEASE='beta'
+VERSION="${MAJORVER}.${MINORVER}.${PATCHVER}-${RELEASE}"
+
+# output
+VERBOSE=0
+DEBUG=0
+
+# specify the install destination directory
+PREFIX="${HOME}"
+DESTDIR="${PREFIX}/.shell"
+
+# url for the archive
+URI='https://github.com/oxnz/shell-utils/xx'
+
+msgdump() {
+	if [ $# -lt 2 ]; then
+		msgdump "error" "msgdump: 2+ arguments expected, but $# found: '$@'"
+		return 1
+	fi
+	local level="$1"
+	shift
+	local msg="$*"
+	case "${level}" in
+		debug)
+			if [ "${VERBOSE}" -gt 0 ]; then
+				echo "[${PROGNAME}] ${level}: ${msg}"
+			fi
+			;;
+		info)
+			echo "[${PROGNAME}] ${msg}"
+			;;
+		warn|warning|error)
+			echo "[${PROGNAME}] ${level}: ${msg}" >&2
+			;;
+	esac
+}
+
+optparse() {
+	local OPTIND=1
+	local opt
+
+    while getopts "d:hv" opt; do
+		case $opt in
+			d)
+				DESTDIR=$OPTARG
+				if [ -d $DESTDIR ]; then
+					msgdump 'error' "directory already exists: [$DESTDIR]"
+					return 1
+				fi
+				;;
+			D)
+				DEBUG=1
+				VERBOSE=$((VERBOSE+1))
+				set -x
+				;;
+			h)
+				cat << EOH
+Usage: $0 [options]"
+  Options:
+	  -d DIR	specify the installation directory
+	  -D		enable debug mode
+	  -h		show this message and exit
+	  -v		specify verbose level
+EOH
+				return
+				;;
+			v)
+				VERBOSE=$((VERBOSE+1))
+				;;
+		esac
+	done
+	shift $((OPTIND-1))
+
+	if [ $# -ne 0 ]; then
+		msgdump 'error' "unexpected argument(s): $@"
+		return 1
+	fi
+}
+
+initialize() {
+	msgdump 'info' "               Shell-utils installer ${VERSION}"
+	case "$0" in
+		csh|tcsh)
+			msgdump 'warn' "support for $0 is incomplete for now"
+			msgdump 'warn' "please do not use in production"
+			;;
+		ash)
+			msgdump 'error' "sorry, ash is not supported for now"
+			;;
+		*)
+			msgdump 'debug' "install for shell: [$0]"
+			;;
+	esac
+}
+
+finalize() {
+	msgdump 'debug' 'finalize success'
+}
+
+populate() {
+	msgdump 'info' "retrieve archive from uri: [${URI}]"
+	local archive
+	if ! archive="$(mktemp)"; then
+		msgdump 'error' 'cannot create temporary archive'
+		return 1
+	else
+		trap "rm -f ${archive}" INT HUP QUIT TERM KILL
+	fi
+	if which wget > /dev/null; then
+		if wget -nv "${URI}" -O "${archive}"; then
+			msgdump 'debug' "download success: [file=${archive}]"
+		else
+			msgdump 'error' "unable to download shell-utils"
+			return 1
+		fi
+	elif which curl > /dev/null; then
+		msgdump 'debug' "'wget' not found, fallback to curl"
+		if curl -o "${archive}" "${URI}"; then
+			msgdump 'debug' "download success: [file=${archive}]"
+		else
+			msgdump 'error' "unable to download shell-utils"
+			return 1
+		fi
+	else
+		msgdump 'error' "cannot find 'wget' or 'curl' which is used to download the shell-utils"
+	fi || msgdump 'error' "unable to download shell-utils"
+	msgdump 'info' "extract archive: [${archive}] to [${DESTDIR}]"
+	if tar pzxf "${archive}" -C "${DESTDIR}"; then
+		msgdump 'info' 'extract failed'
+		return 1
+	else
+		msgdump 'debug' "extracted successfully"
+	fi
+}
+
+main() {
+	optparse
+	if ! initialize; then
+		msgdump 'error' 'installer init failed'
+		return 1
+	fi
+	if ! populate; then
+		msgdump 'error' 'install process failed'
+		return 1
+	fi
+	if ! finalize; then
+		msgdump 'debug' 'installer finished with non-zero status'
+		return 1
+	fi
+	msgdump 'info' 'install finished successfully, enjoy!'
+}
+
+main $@
+
+# detect shell type:
+#http://stackoverflow.com/questions/3327013/how-to-determine-the-current-shell-im-working-on#comment17728546_3327013

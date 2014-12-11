@@ -107,16 +107,7 @@ Contribute
 
 If you have ideas on how to make the configuration easier to maintain (and faster), don’t hesitate to fork and send pull requests!
 
-Any impovement is welcome
-
-### Guide lines:
-	1. the plugin manager should keep in one top directory
-	2. install script should be robust and most compatible
-	3. the startup should contain debug functionability such as list the loaded functions and libraries
-	4. should keep effeciency in mind, so compile needed
-	5. code should be documented, generate help file from source file
-	6. interface skel help func to system access, such as help in bash and run-help in zsh
-	7. cause there's many perl script in /bin and /usr/bin, so the skel implemented in perl, if needed, can be rewrite in C/C++
+Any impovement is welcome. For more details, please refer to the CONTRIBUTING.md.
 
 License
 -------

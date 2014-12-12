@@ -1,0 +1,19 @@
+TODO
+====
+
+emergency
+---------
+/bin/mv will generate dangling link in the below case:
+	mkdir -p a/b
+	cd a/b
+	touch a
+	ln -s a b
+	mv b ../
+then b is a dangling link, fix this by wrapper the mv up with function:
+mv() {
+	if [ -L b ]; then
+		ln -s "$(readlink -e "${src}")" "${dst}"
+	else
+		command mv "${src}" "${dst}"
+	fi
+}

@@ -26,7 +26,7 @@ a simple logger
 # Constants: LOGFILE
 ################################################################################
 function log() {
-    local -r LOGFILE="${HOME}/.shell/shell.log"
+    local -r LOGFILE="${HOME}/.shell/var/log/shell.log"
     echo "[$(date '+%F %T %Z') $(pwd) ${FUNCNAME[1]}] $@" >> "$LOGFILE"
 }
 

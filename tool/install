@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 #
-# ===============================================================
+#================================================================
 #
 # Filename: install.sh
 #
@@ -21,7 +21,7 @@
 # Distributed under terms of the [LICENSE] license.
 # [license]
 #
-# ===============================================================
+#================================================================
 #
 
 set -e
@@ -35,44 +35,224 @@ RELEASE='beta'
 VERSION="${MAJORVER}.${MINORVER}.${PATCHVER}-${RELEASE}"
 
 # output
-VERBOSE=0
+VERBOSE=1
 DEBUG=0
 
 # specify the install destination directory
 PREFIX="${HOME}"
-DESTDIR="${PREFIX}/.shell"
+DESTDIR="${PREFIX}/.shell/abc"
 
 # url for the archive
-URI='https://github.com/oxnz/shell-utils/xx'
+ARCHURL='https://github.com/oxnz/shell-utils/archive/v0.1.0.tar.gz'
+REPOURL='https://github.com/oxnz/shell-utils'
 
 msgdump() {
 	if [ $# -lt 2 ]; then
 		msgdump "error" "msgdump: 2+ arguments expected, but $# found: '$@'"
 		return 1
 	fi
-	local level="$1"
+	local level="$(echo "$1" | tr '[:lower:]' '[:upper:]')"
 	shift
 	local msg="$*"
 	case "${level}" in
-		debug)
+		DEBUG)
 			if [ "${VERBOSE}" -gt 0 ]; then
-				echo "[${PROGNAME}] ${level}: ${msg}"
+				echo "[${level}] ${msg}"
+			else
+				return
 			fi
 			;;
-		info)
-			echo "[${PROGNAME}] ${msg}"
+		INFO)
+			echo "[${level}] ${msg}"
 			;;
-		warn|warning|error)
-			echo "[${PROGNAME}] ${level}: ${msg}" >&2
+		WARNING)
+			echo "[${level}] ${msg}" >&2
+			;;
+		ERROR)
+			echo "[${level}] ${msg}" >&2
+			;;
+		*)
+			msgdump 'error' "unexpected level: [${level}]"
 			;;
 	esac
 }
 
-optparse() {
+# pre-install process
+initialize() {
+	case "$(basename "$0")" in
+		csh|tcsh)
+			msgdump 'warning' "support for $0 is incomplete for now"
+			msgdump 'warning' "please do not use in production"
+			;;
+		ash)
+			msgdump 'error' "sorry, ash is not supported for now"
+			;;
+		*)
+			msgdump 'debug' "install for shell: [$0]"
+			;;
+	esac
+	if [ -e "${DESTDIR}" ]; then
+		msgdump 'error' "destination already exists: [${DESTDIR}]"
+		return 1
+	fi
+}
+
+# post-install process
+finalize() {
+	msgdump 'debug' 'formalize success'
+}
+
+# install process
+if which git > /dev/null; then
+instproc() {
+	trap "rm -rf "${DESTDIR}"" INT HUP QUIT TERM KILL
+	if ! git clone "${REPOURL}" "${DESTDIR}"; then
+		msgdump 'debug' 'git return non-zero status'
+		return 1
+	fi
+	if [ ! -d "${DESTDIR}" ]; then
+		# signal caught, incomplete repo was removed
+		return 1
+	fi
+}
+else
+instproc() {
+	msgdump 'info' "retrieve archive from uri: [${ARCHURL}]"
+	local archive
+	if ! archive="$(mktemp)"; then
+		msgdump 'error' 'cannot create temporary archive'
+		return 1
+	else
+		trap "rm -f "${archive}"" INT HUP QUIT TERM KILL
+	fi
+	if which wget > /dev/null; then
+		if wget -nv "${ARCHURL}" -O "${archive}"; then
+			msgdump 'debug' "download success: [file=${archive}]"
+		else
+			msgdump 'error' "unable to download shell-utils"
+			return 1
+		fi
+	elif which curl > /dev/null; then
+		msgdump 'debug' "'wget' not found, fallback to curl"
+		if curl -o "${archive}" "${ARCHURL}"; then
+			msgdump 'debug' "download success: [file=${archive}]"
+		else
+			msgdump 'error' "unable to download shell-utils"
+			return 1
+		fi
+	else
+		msgdump 'error' "cannot find 'wget' or 'curl' which is used to download the shell-utils"
+	fi || msgdump 'error' "unable to download shell-utils"
+	msgdump 'info' "extract archive: [${archive}] to [${DESTDIR}]"
+	local tempdir
+	if ! tempdir="$(mktemp -d)"; then
+		msgdump 'error' 'failed to create tempdir directory'
+		return 1
+	fi
+	msgdump 'debug' "tempdir directory created for extract: [${tempdir}]"
+	if ! tar pzxf "${archive}" -C "${tempdir}"; then
+		msgdump 'info' "extract failed: [tar pzxf ${archive} -C ${tempdir}]"
+		return 1
+	fi
+	msgdump 'debug' "extracted to [${tempdir}] successfully"
+	local srcdir
+	if ! srcdir="${tempdir}/$(ls "${tempdir}")"; then
+		msgdump 'error' "cannot access tempdir: [${tempdir}]"
+		return 1
+	fi
+	if [ ! -d "${srcdir}" ]; then
+		msgdump 'error' "source directory not found: [${srcdir}]"
+		return 1
+	fi
+	msgdump 'debug' "move from [${srcdir}] to [${DESTDIR}]"
+	if mv "${srcdir}" "${DESTDIR}"; then
+		msgdump 'info' "installed to [${DESTDIR}] successfully"
+	else
+		msgdump 'error' "failed to move from [${srcdir}] to [${DESTDIR}]"
+		return 1
+	fi
+	rmdir "${tempdir}" || msgdump 'warning' "unable to remove tempdir: [${tempdir}]"
+}
+fi
+
+formalize() {
+	local src
+	local dst
+	for src in "${DESTDIR}/dot/*"; do
+		dst="${HOME}/.$(basename "${src}")"
+		if [ ! -e "${dst}" ]; then
+			continue
+		fi
+		if [ -h "${dst}" ]; then
+			msgdump 'debug' "unlink symbol link: [${dst}]"
+			if ! unlink "${dst}"; then
+				msgdump 'warning' "unlink symbol link: [${dst}] failed"
+				continue
+			fi
+		else
+			if mv "${dst}" "${DESTDIR}/var/bkp/"; then
+				msgdump 'info' "backup [${dst}] to [${DESTDIR}/var/bkp]"
+			else
+				msgdump 'warning' "failed to move [${dst}] to [${DESTDIR}/var/bkp]"
+				continue
+			fi
+		fi
+		if ln -s "${src}" "${dst}"; then
+			msgdump 'warning' "failed to create symbol link: [${dst}]"
+		fi
+	done
+}
+
+uninst() {
+	msgdump 'info' "collecting information for uninstall"
+	if DESTDIR="$(dirname "$(dirname "$(pwd)/$0")")"; then
+		msgdump 'info' "path: [${DESTDIR}]"
+	else
+		msgdump 'error' "cannot find install path"
+		return 1
+	fi
+	local src lnk dst bkp name
+	for src in "${DESTDIR}"/rc/*; do
+		name="$(basename "${src}")"
+		lnk="${HOME}/.${name}"
+		bkp="${DESTDIR}/var/bkp/${name}"
+		if ! dst="$(readlink -e "${lnk}")"; then
+			msgdump 'warning' "dangling symbol link found: [${lnk}]"
+		fi
+		if [ "${dst}" = "${src}" ]; then
+			msgdump 'info' "uninstalling [${lnk}]"
+			if ! unlink "${lnk}"; then
+				msgdump 'warning' "unable to unlink [${lnk}]"
+				continue
+			fi
+		else
+			msgdump 'warning' "[${lnk}] changed since install, ignored"
+			continue
+		fi
+		if [ -e "${bkp}" ]; then
+			msgdump 'info' "restoring [${bkp}] to [${lnk}]"
+			if ! mv "${bkp}" "${lnk}"; then
+				msgdump 'error' "unable to restore [${lnk}]"
+				continue
+			fi
+		fi
+	done
+}
+
+main() {
+	cat << EOF
+         __         ____            __  _ __    
+   _____/ /_  ___  / / /     __  __/ /_(_) /____
+  / ___/ __ \/ _ \/ / /_____/ / / / __/ / / ___/
+ (__  ) / / /  __/ / /_____/ /_/ / /_/ / (__  ) 
+/____/_/ /_/\___/_/_/      \__,_/\__/_/_/____/  
+------------------------------------------------
+       Shell-utils installer ${VERSION}
+------------------------------------------------
+EOF
 	local OPTIND=1
 	local opt
-
-    while getopts "d:hv" opt; do
+    while getopts "d:huv" opt; do
 		case $opt in
 			d)
 				DESTDIR=$OPTARG
@@ -88,13 +268,22 @@ optparse() {
 				;;
 			h)
 				cat << EOH
-Usage: $0 [options]"
-  Options:
-	  -d DIR	specify the installation directory
-	  -D		enable debug mode
-	  -h		show this message and exit
-	  -v		specify verbose level
+Usage: $0 [options]
+options:
+    -d DIR  install to the specified DIR
+    -D	  enable debug mode
+    -h	  show this message and exit
+    -v	  specify verbose level
 EOH
+				return
+				;;
+			u)
+				if uninst; then
+					msgdump 'info' "uninstall success"
+				else
+					msgdump 'error' "uninstall failed"
+					return 1
+				fi
 				return
 				;;
 			v)
@@ -108,82 +297,32 @@ EOH
 		msgdump 'error' "unexpected argument(s): $@"
 		return 1
 	fi
-}
 
-initialize() {
-	msgdump 'info' "               Shell-utils installer ${VERSION}"
-	case "$0" in
-		csh|tcsh)
-			msgdump 'warn' "support for $0 is incomplete for now"
-			msgdump 'warn' "please do not use in production"
-			;;
-		ash)
-			msgdump 'error' "sorry, ash is not supported for now"
-			;;
-		*)
-			msgdump 'debug' "install for shell: [$0]"
-			;;
-	esac
-}
-
-finalize() {
-	msgdump 'debug' 'finalize success'
-}
-
-populate() {
-	msgdump 'info' "retrieve archive from uri: [${URI}]"
-	local archive
-	if ! archive="$(mktemp)"; then
-		msgdump 'error' 'cannot create temporary archive'
-		return 1
-	else
-		trap "rm -f ${archive}" INT HUP QUIT TERM KILL
-	fi
-	if which wget > /dev/null; then
-		if wget -nv "${URI}" -O "${archive}"; then
-			msgdump 'debug' "download success: [file=${archive}]"
-		else
-			msgdump 'error' "unable to download shell-utils"
-			return 1
-		fi
-	elif which curl > /dev/null; then
-		msgdump 'debug' "'wget' not found, fallback to curl"
-		if curl -o "${archive}" "${URI}"; then
-			msgdump 'debug' "download success: [file=${archive}]"
-		else
-			msgdump 'error' "unable to download shell-utils"
-			return 1
-		fi
-	else
-		msgdump 'error' "cannot find 'wget' or 'curl' which is used to download the shell-utils"
-	fi || msgdump 'error' "unable to download shell-utils"
-	msgdump 'info' "extract archive: [${archive}] to [${DESTDIR}]"
-	if tar pzxf "${archive}" -C "${DESTDIR}"; then
-		msgdump 'info' 'extract failed'
-		return 1
-	else
-		msgdump 'debug' "extracted successfully"
-	fi
-}
-
-main() {
-	optparse
+	msgdump 'info' 'intaller initializing'
 	if ! initialize; then
-		msgdump 'error' 'installer init failed'
+		msgdump 'error' 'installer failed to initialize'
 		return 1
 	fi
-	if ! populate; then
+	msgdump 'info' "installing to [${DESTDIR}]"
+	if ! instproc; then
 		msgdump 'error' 'install process failed'
 		return 1
 	fi
-	if ! finalize; then
-		msgdump 'debug' 'installer finished with non-zero status'
-		return 1
+	msgdump 'info' "install complete"
+	msgdump 'info' "formalizing"
+	if ! formalize; then
+		msgdump 'warning' "formalize failed"
+		cat << EOF
+it seems something wrong happened while formalizing,
+please refer to the ${LOGFILE} for more information
+bug report: https://github.com/oxnz/shell-utils/issues
+EOF
 	fi
-	msgdump 'info' 'install finished successfully, enjoy!'
+	msgdump 'info' "installer finalizing"
+	if ! finalize; then
+		msgdump 'warning' "installer finalizing failed"
+	fi
+	msgdump 'info' 'install success'
 }
 
 main $@
-
-# detect shell type:
-#http://stackoverflow.com/questions/3327013/how-to-determine-the-current-shell-im-working-on#comment17728546_3327013

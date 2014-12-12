@@ -24,8 +24,7 @@
 #               Prerequisites are generated automatically; makedepend is not
 #               needed (see documentation for GNU make Version 3.80, July 2002,
 #               section 4.13). The utility sed is used.
-#========================================== makefile template version 1.8 ======
-#
+#========================================= [Makefile Template Version 1.8] =====
 
 include Makefile.inc
 

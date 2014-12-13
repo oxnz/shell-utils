@@ -22,11 +22,11 @@ Install
 
 Open terminal and type:
 
-	curl -L https://github.com/oxnz/shell-utils/install.sh | sh
+	curl -L https://raw.githubusercontent.com/oxnz/shell-utils/master/tool/install | sh
 
 or
 
-	wget https://github.com/oxnz/shell-utils/install.sh -O - | sh
+	wget https://raw.githubusercontent.com/oxnz/shell-utils/master/tool/install -O - | sh
 
 and this will append the source command in your .bashrc and .zshrc, then create
 the `.shell` directory under your $HOME.

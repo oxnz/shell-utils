@@ -17,3 +17,14 @@ mv() {
 		command mv "${src}" "${dst}"
 	fi
 }
+
+candidate
+---------
+
+define a new language ext-shell:
+	rewrite script like this:
+
+		function hello() argc>=2,argv=(int,str)
+		begin
+			echo "hello $argv[1].upper $argv[2].lower"
+		end

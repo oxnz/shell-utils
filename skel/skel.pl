@@ -100,9 +100,9 @@ my %optstubs = (
 
 my $stub = $optstubs{$opt} or sub {
 	if ($opt =~ /^\w+$/) {
-		print STDERR "invalid sub command: [$opt]\ntry '$0 --help' to see usage\n";
+		print STDERR "invalid sub command: [$opt]\nTry '$0 --help' for more information.\n";
 	} else {
-		print STDERR "invalid option: [$opt]\ntry '$0 --help' to see usage\n";
+		print STDERR "invalid option: [$opt]\nTry '$0 --help' for more information.\n";
 	}
 	exit 1;
 }->();

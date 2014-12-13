@@ -40,7 +40,7 @@ DEBUG=0
 
 # specify the install destination directory
 PREFIX="${HOME}"
-DESTDIR="${PREFIX}/.shell/abc"
+DESTDIR="${PREFIX}/.shell"
 
 # url for the archive
 ARCHURL='https://github.com/oxnz/shell-utils/archive/v0.1.0.tar.gz'

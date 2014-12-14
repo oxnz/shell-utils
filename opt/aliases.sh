@@ -96,6 +96,7 @@ alias define='define -d ~/.shell/data/define'
 #new command {{{
 alias now='/bin/date +"%F %T"'
 alias goc='go build'
+alias netstat6='netstat -A inet6'
 #}}}
 
 #command not in PATH var {{{

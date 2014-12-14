@@ -24,16 +24,113 @@ case $- in
 	*) return;;
 esac
 
-INSTPATH="$(dirname "$(readlink -e "${BASH_SOURCE[0]}")")"
-echo ${BASH_SOURCE[0]}
-echo ${BASH_SOURCE}
-echo "$INSTPATH"
-# source the custom utilities
-if [ -d ~/.shell ]; then
-	for i in ~/.shell/*.{ba,}sh; do
-		if [ -r $i ]; then
-			. $i
+if ! SHELL_UTILS_HOME="$(readlink -e "${BASH_SOURCE}")"; then
+	echo "readlink failed: ${BASH_SOURCE}" >&2
+	return 1
+fi
+if ! SHELL_UTILS_HOME="$(dirname "$(dirname "${SHELL_UTILS_HOME}")")"; then
+	echo "dirname error: ${SHELL_UTILS_HOME}" >&2
+	return 1
+fi
+
+# source shell-utils
+su::initialize() {
+	local mod f
+	for mod in lib core opt ext custom; do
+		mod="${SHELL_UTILS_HOME}/${mod}"
+		if [ -d "${mod}" ]; then
+			for f in "$mod"/*.sh; do
+				if [ -r "$f" ]; then
+					#echo "$f"
+					. "$f"
+				fi
+			done
+			for f in "${mod}"/*.bash; do
+				if [ -r "$f" ]; then
+					#echo $f
+					. "$f"
+				fi
+			done
+		else
+			echo "module not found: [$i]" >&2
+			return 1
 		fi
 	done
-	unset i
-fi
+}
+su::initialize
+unset -f SU::initialize
+
+log() {
+	local OPTIND=1
+	local opt
+	while getopts "h:v" opt; do
+		case "$opt" in
+			h)
+				cat << EOF
+Usage: ${FUNCNAME[0]} [option] level message ...
+  options:
+	-h	show this message and exit
+	-v  verbose output
+  level:
+  	debug
+	info
+	warning
+	error
+EOF
+				;;
+			v)
+				;;
+		esac
+	done
+	shift $((OPTIND-1))
+	if [ $# -lt 2 ]; then
+		log 'error' "2 or more arguments expected, but $# found"
+		return 1
+	fi
+	case "$level" in
+		debug)
+			if [ $VERBOSE -le 0 ]; then
+				return
+			fi
+			;;
+		info)
+			if [ $VERBOSE -le 1 ]; then
+				return
+			fi
+			;;
+		warning)
+			if [ $VERBOSE -le 2 ]; then
+				return
+			fi
+			;;
+		error)
+			;;
+	esac
+	echo "[${FUNCNAME[0]} ${level}] $*"
+}
+
+use() {
+	local OPTIND=1
+	local opt
+	while getopts "h:v" opt; do
+		case "$opt" in
+			h)
+				;;
+			v)
+				;;
+		esac
+	done
+	shift $((OPTIND-1))
+	if [ $# -eq 0 ]; then
+		log 'error'
+	fi
+	local mod
+	for mod in "$@"; do
+		echo "[$mod]"
+	done
+	return
+}
+
+use core \
+	ext	\
+	lib

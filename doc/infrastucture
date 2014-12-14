@@ -155,3 +155,11 @@ custom/
 	|
 	|____ switch.sh		# switches, such as set, shopt, HISTIGNORE goes here
 ```
+
+###'rc'
+
+```
+rc/
+ |___ rc.os
+ |___ rc.host
+ |___ rc.user

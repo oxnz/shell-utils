@@ -31,6 +31,10 @@ or
 and this will append the source command in your .bashrc and .zshrc, then create
 the `.shell` directory under your $HOME.
 
+To specify another directory instead of the default ~/.shell, you need define the DESTDIR variable like this:
+
+	wget https://raw.githubusercontent.com/oxnz/shell-utils/master/tool/install -O - | DESTDIR=path-to-install sh
+
 ### manual
 
 1. Clone the repository:
@@ -45,6 +49,8 @@ echo '. ~/.shell/bootstrap.sh' >> ~/.zshrc
 ```
 
 3. Already done, just open a new terminal and testing the amazing stuff.
+
+For more information, refer to the [install manual](./tool/install.md)
 
 Customize
 ---------
@@ -90,6 +96,7 @@ Infrastructure
 	|___ ext/		# extension utils
 	|___ tool/		# tools used for generate docs, check codes, etc.
 	|___ test/		# test suits
+	|___ misc/		# misc
 	|___ custom/	# customize script
 	|___ .git/		# git directory
 	|___ .gitignore	# ignore the .git and custom directory

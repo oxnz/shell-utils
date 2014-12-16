@@ -17,50 +17,29 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-#
-# ~/.zshrc
-#
-# Created: 2013-06-25 12:20:00
-# Last-update: 2014-11-03 15:50:55
-# Version: 0.1
-# Author: Oxnz
-# License: Copyright (C) 2013 Oxnz
-# Reference: http://grml.org/zsh/zsh-lovers.html
 
-# Skip all this for non-interactive shells
-[[ -z "$PS1" ]] && return
+# you also need to put \[ and \] around any color codes so that bash does not
+# take them into account when calculating line wraps. Also you can make use
+# of the tput command to have this work in any terminal as long as the TERM
+# is set correctly. For instance $(tput setaf 1) and $(tput sgr0)
+# ref:
+# http://www.cyberciti.biz/tips/howto-linux-unix-bash-shell-setup-prompt.html
 
-if ! SHELL_UTILS_HOME="$(readlink -e "${(%):-%N}")"; then
-	echo "readlink failed: ${BASH_SOURCE}" >&2
-	return 1
+PS1='\[\e[01;34m\][\[\e[00m\]\[\e[00;36m\]\u\[\e[00;33m\]@\[\e[00;32m\]\h\[\e[01;32m\]:\[\e[00;36m\]\W\[\e[01;32m\]:\[\e[00;3$(($?==0?2:1))m\]$?\[\e[01;34m\]]\$\[\e[00m\] '
+
+# set variable identifying the chroot you work in (used in the prompt below)
+if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
+	debian_chroot=$(cat /etc/debian_chroot)
 fi
-if ! SHELL_UTILS_HOME="$(dirname "$(dirname "${SHELL_UTILS_HOME}")")"; then
-	echo "dirname error: ${SHELL_UTILS_HOME}" >&2
-	return 1
-fi
-# source shell-utils
-SU::initialize() {
-	local mod f
-	for mod in core opt ext custom; do
-		mod="${SHELL_UTILS_HOME}/${mod}"
-		if [ -d "${mod}" ]; then
-			for f in "$mod"/*.sh(N); do
-				if [ -r "$f" ]; then
-					#echo "$f"
-					. "$f"
-				fi
-			done
-			for f in "${mod}"/*.zsh(N); do
-				if [ -r "$f" ]; then
-					#echo $f
-					. "$f"
-				fi
-			done
-		else
-			echo "module not found: [$i]" >&2
-			return 1
-		fi
-	done
-}
-SU::initialize
-unset -f SU::initialize
+
+# echo -en "\e]0;string\a" #-- Set icon name and window title to string
+# echo -en "\e]1;string\a" #-- Set icon name to string
+# echo -en "\e]2;string\a" #-- Set window title to string
+# If this is an xterm set the title to user@host:dir
+case "$TERM" in
+	xterm*|rxvt*)
+		PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h:\w\a\]$PS1"
+		;;
+	*)
+		;;
+esac

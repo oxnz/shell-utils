@@ -26,7 +26,7 @@ a simple logger
 # Constants: LOGFILE
 ################################################################################
 function log() {
-    local -r LOGFILE="${HOME}/.shell/var/log/shell.log"
+    local -r LOGFILE="${SHELL_UTILS_HOME}/var/log/shell.log"
     echo "[$(date '+%F %T %Z') $(pwd) ${FUNCNAME[1]}] $@" >> "$LOGFILE"
 }
 
@@ -354,7 +354,8 @@ function __initialize__() {
         function command_not_found_handle() {
             echo "${SHELL:-bash}: $1: command not found"
         }
-        declare -g command_not_found_handle=command_not_found_handle
+        declare command_not_found_handle=command_not_found_handle
+        #declare -g command_not_found_handle=command_not_found_handle
     fi
 
     # test if function to declare already exists

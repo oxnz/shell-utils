@@ -24,10 +24,11 @@ case $- in
 	*) return;;
 esac
 
-if ! SHELL_UTILS_HOME="$(readlink -e "${BASH_SOURCE}")"; then
+if ! SHELL_UTILS_HOME="$(readlink "${BASH_SOURCE}")"; then
 	echo "readlink failed: ${BASH_SOURCE}" >&2
 	return 1
 fi
+
 if ! SHELL_UTILS_HOME="$(dirname "$(dirname "${SHELL_UTILS_HOME}")")"; then
 	echo "dirname error: ${SHELL_UTILS_HOME}" >&2
 	return 1

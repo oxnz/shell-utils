@@ -38,7 +38,7 @@ SAVEHIST=$HISTSIZE
 
 ###var(s) for other commands {{{
 # use all processors for fast, parallel make(1) builds
-export MAKEFLAGS="-j $(fgrep -c processor /proc/cpuinfo)"
+#export MAKEFLAGS="-j $(fgrep -c processor /proc/cpuinfo)"
 export EDITOR=vim
 export PYTHONSTARTUP=~/.pythonrc
 #}}}

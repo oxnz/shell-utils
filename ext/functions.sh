@@ -371,7 +371,7 @@ function __initialize__() {
         local ecode=$?
         local cmd
         cmd="$(history | tail -1 | sed -e 's/^ *[0-9]* *//')"
-        log "command [${cmd}] execute failed with exit code [${ecode}]"
+        log "command: [${cmd}] exit code: [${ecode}]"
     }
     trap _err ERR
 

@@ -100,7 +100,13 @@ alias netstat6='netstat -A inet6'
 #}}}
 
 #command not in PATH var {{{
-#alias py2applet='/System/Library/Frameworks/Python.framework/Versions/Current/Extras/bin/py2applet'
+case "$OSTYPE" in
+	darwin*)
+		alias airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport'
+		alias py2applet='/System/Library/Frameworks/Python.framework/Versions/Current/Extras/bin/py2applet'
+		;;
+esac
+
 # learn you a good emacs
 #alias vi='echo "command not found"'
 #alias vi='emacs-24.3 -nw'

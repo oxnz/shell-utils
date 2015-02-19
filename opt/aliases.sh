@@ -104,6 +104,7 @@ case "$OSTYPE" in
 	darwin*)
 		alias airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport'
 		alias py2applet='/System/Library/Frameworks/Python.framework/Versions/Current/Extras/bin/py2applet'
+		alias vmrun='/Applications/VMware\ Fusion.app/Contents/Library/vmrun'
 		;;
 esac
 

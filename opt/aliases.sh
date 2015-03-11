@@ -19,12 +19,6 @@ alias egrep='egrep --color=auto'
 alias fgrep='fgrep --color=auto'
 #}}}
 
-# platform compatible {{{
-which xdg-open > /dev/null && alias open='xdg-open'
-which pbcopy > /dev/null && alias pbcopy='xsel --clipboard --input'
-which pbpaste > /dev/null && alias pbcopy='xsel --clipboard --output'
-#}}}
-
 # play safer {{{
 alias rm='rm -i'
 alias cp='cp -i'
@@ -38,8 +32,6 @@ if [ -x /usr/bin/dircolors ]; then
 	alias ls='ls --color=auto'
 	#alias dir='dir --color=auto'
 	#alias vdir='vdir --color=auto'
-elif [ $(uname -s) = "Darwin" ]; then
-    :
 fi
 
 # Add an "alert" alias for long running commands.  Use like so:
@@ -100,11 +92,17 @@ alias netstat6='netstat -A inet6'
 #}}}
 
 #command not in PATH var {{{
-case "$OSTYPE" in
-	darwin*)
+case "$(uname -s)" in
+	Darwin)
 		alias airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport'
 		alias py2applet='/System/Library/Frameworks/Python.framework/Versions/Current/Extras/bin/py2applet'
 		alias vmrun='/Applications/VMware\ Fusion.app/Contents/Library/vmrun'
+		;;
+	Linux)
+		# platform compatible
+		alias pbcopy='xsel --clipboard --input'
+		alias pbcopy='xsel --clipboard --output'
+		alias open='xdg-open'
 		;;
 esac
 

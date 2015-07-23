@@ -913,11 +913,16 @@ EOT
 which unix2dos > /dev/null || function unix2dos() {
     [[ "$#" -eq 0 ]] && echo "Usage: unix2dos <file>" ||
     command perl -i -p -e 's/\n/\r\n/' "$1"
+	# alternatives:
+	#	1. awk 'sub("$", "\r")' unixfile.txt > dosfile.txt
 }
 
 which dos2unix > /dev/null || function dos2unix() {
     [[ "$#" -eq 0 ]] && echo "Usage: dos2unix <file>" ||
     command perl -i -p -e 's/\r\n/\n/' "$1"
+	# alternatives:
+	# 	1. tr -d '\015\032' < dosfile.txt > unixfile.txt
+	#	2. awk '{ sub("\r$", ""); print }' dosfile.txt > unixfile.txt
 }
 
 which perror > /dev/null || function perror() {

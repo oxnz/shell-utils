@@ -72,8 +72,8 @@ alias beep='printf "\007"'
 #}}}
 
 # command wrapper {{{
-alias svn='svn-color'
-alias define='define -d ~/.shell/data/define'
+which svn-color > /dev/null && alias svn='svn-color'
+which define > /dev/null && alias define='define -d ~/.shell/data/define'
 #}}}
 
 # override default vesion or default path command {{{
@@ -87,7 +87,7 @@ alias define='define -d ~/.shell/data/define'
 
 #new command {{{
 alias now='/bin/date +"%F %T"'
-alias goc='go build'
+which go > /dev/null && alias goc='go build'
 alias netstat6='netstat -A inet6'
 #}}}
 

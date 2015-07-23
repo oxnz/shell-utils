@@ -40,7 +40,12 @@ SAVEHIST=$HISTSIZE
 # use all processors for fast, parallel make(1) builds
 #export MAKEFLAGS="-j $(fgrep -c processor /proc/cpuinfo)"
 export EDITOR=vim
-export PYTHONSTARTUP=~/.pythonrc
+PYTHONSTARTUP=~/.pythonrc
+if [ -r "$PYTHONSTARTUP" ]; then
+	export PYTHONSTARTUP
+else
+	unset PYTHONSTARTUP
+fi
 #}}}
 
 # input method {{{

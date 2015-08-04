@@ -533,7 +533,7 @@ fi
 # find a pattern in a set of files and highlight them
 # see http://tldp.org/LDP/abs/html/sample-bashrc.html
 ################################################################################
-function fstr() {
+function fs() {
     local opt
     local OPTIND=1
     while getopts "d:Ef:hI" opt; do
@@ -569,7 +569,7 @@ End-Of-Usage
                 local -r case="-i"
                 ;;
             ?)
-                fstr -h >&2
+                fs -h >&2
                 return 1
         esac
     done
@@ -586,6 +586,13 @@ End-Of-Usage
         set -- "$@" "-e" "$pat"
     done
     find "${dir:-.}" -type f -name "${fpat:-*}" -exec "${grep:-grep}" --color=auto -H -n ${case} "$@" {} \;
+}
+
+################################################################################
+# find file
+################################################################################
+function ff() {
+    find . -type f -name "$@"
 }
 
 ################################################################################

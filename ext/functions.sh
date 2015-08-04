@@ -428,6 +428,8 @@ show ip addr and scope, etc about every NIC found
 # hostname --all-ip-address (man 1 hostname)
 =cut
 ################################################################################
+case "$(uname -s)" in
+	Linux)
 function ips() {
     ip -family inet -oneline address show | perl -ne '
     {
@@ -449,7 +451,13 @@ function ips() {
 
     END { &fmtout(); }'
 }
-
+;;
+	Darwin)
+		function ips() {
+			ifconfig | awk '/inet / { print $2 }'
+		}
+		;;
+esac
 ################################################################################
 : << =cut
 =head2 extract

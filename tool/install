@@ -41,6 +41,7 @@ DEBUG=0
 # specify the install destination directory
 PREFIX="${HOME}"
 DESTDIR="${DESTDIR:-${HOME}/.shell}"
+LOGFILE=
 
 # url for the archive
 ARCHURL='https://github.com/oxnz/shell-utils/archive/v0.1.0.tar.gz'
@@ -93,6 +94,11 @@ initialize() {
 	esac
 	if [ -e "${DESTDIR}" ]; then
 		msgdump 'error' "destination already exists: [${DESTDIR}]"
+		return 1
+	fi
+
+	if ! LOGFILE="$(mktemp)"; then
+		msgdump 'error' "cannot create logfile"
 		return 1
 	fi
 }
@@ -178,7 +184,7 @@ fi
 formalize() {
 	local src
 	local dst
-	for src in "${DESTDIR}/dot/*"; do
+	for src in "${DESTDIR}/dot/"*; do
 		dst="${HOME}/.$(basename "${src}")"
 		if [ ! -e "${dst}" ]; then
 			msgdump 'debug' "skipped for non-exists target: [${dst}]"
@@ -241,7 +247,7 @@ uninst() {
 }
 
 main() {
-	[ -t 1 ] && echo $'\e[31m'
+	[ -t 1 ] && printf '%b' "\033[31;3m"
 	cat << EOF
          __         ____            __  _ __    
    _____/ /_  ___  / / /     __  __/ /_(_) /____
@@ -252,7 +258,8 @@ main() {
        Shell-utils installer ${VERSION}
 ------------------------------------------------
 EOF
-	[ -t 1 ] && echo $'\e[m'
+	[ -t 1 ] && printf '%b' "\033[0m\n"
+	exit
 	local OPTIND=1
 	local opt
     while getopts "d:huv" opt; do
@@ -273,7 +280,7 @@ EOF
 				cat << EOH
 Usage: $0 [options]
 options:
-    -d DIR    install to the specified DIR
+    -d <dir>  install to the specified DIR
     -D	      enable debug mode
     -h	      show this message and exit
     -v	      specify verbose level

@@ -52,30 +52,53 @@ msgdump() {
 		msgdump "error" "msgdump: 2+ arguments expected, but $# found: '$@'"
 		return 1
 	fi
+	local color=
 	local level="$(echo "$1" | tr '[:lower:]' '[:upper:]')"
 	shift
 	local msg="$*"
+	local out=1
+
+	if [ -f "${LOGFILE}" ]; then
+		echo "[${level}] ${msg}" >> "${LOGFILE}"
+	fi
+
 	case "${level}" in
 		DEBUG)
 			if [ "${VERBOSE}" -gt 0 ]; then
-				echo "[${level}] ${msg}"
+				color="\033[36m"
 			else
 				return
 			fi
 			;;
 		INFO)
-			echo "[${level}] ${msg}"
+			color="\033[32m"
 			;;
 		WARNING)
-			echo "[${level}] ${msg}" >&2
+			color="\033[33m"
+			out=2
 			;;
 		ERROR)
-			echo "[${level}] ${msg}" >&2
+			color="\033[31m"
+			out=2
 			;;
 		*)
 			msgdump 'error' "unexpected level: [${level}]"
 			;;
 	esac
+
+	if [ "${out}" -eq 1 ]; then
+		if [ -t 1 ]; then
+			printf '%b' "${color}[${level}]\033[0m ${msg}\n"
+		else
+			echo "[${level}] ${msg}"
+		fi
+	else
+		if [ -t 2 ]; then
+			printf '%b' "${color}[${level}]\033[0m ${msg}\n" >&2
+		else
+			echo "[${level}] ${msg}" >&2
+		fi
+	fi
 }
 
 # pre-install process
@@ -105,6 +128,15 @@ initialize() {
 
 # post-install process
 finalize() {
+	logdir="${DESTDIR}/var/log"
+	if [ ! -e "${logdir}" ] && ! mkdir -p "${logdir}"; then
+		msgdump 'error' "cannot create log dir: [${logdir}]"
+		return 1
+	fi
+	if ! mv "${LOGFILE}" "${logdir}/install.log"; then
+		msgdump 'error' "cannot move log file to log dir: [${LOGFILE} -> ${logdir}]"
+		return 1
+	fi
 	msgdump 'debug' 'finalize success'
 }
 
@@ -274,13 +306,13 @@ uninst() {
 }
 
 main() {
-	[ -t 1 ] && printf '%b' "\033[31;3m"
+	[ -t 1 ] && printf '%b' "\033[32;2m"
 	cat << EOF
-         __         ____            __  _ __    
+         __         ____            __  _ __
    _____/ /_  ___  / / /     __  __/ /_(_) /____
   / ___/ __ \/ _ \/ / /_____/ / / / __/ / / ___/
- (__  ) / / /  __/ / /_____/ /_/ / /_/ / (__  ) 
-/____/_/ /_/\___/_/_/      \__,_/\__/_/_/____/  
+ (__  ) / / /  __/ / /_____/ /_/ / /_/ / (__  )
+/____/_/ /_/\___/_/_/      \__,_/\__/_/_/____/
 ------------------------------------------------
        Shell-utils installer ${VERSION}
 ------------------------------------------------

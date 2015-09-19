@@ -181,33 +181,60 @@ instproc() {
 }
 fi
 
-formalize() {
+inst() {
 	local src
 	local dst
-	for src in "${DESTDIR}/dot/"*; do
+	local bkpdir="${DESTDIR}/var/bkp"
+
+	if [ ! -d "${bkpdir}" ]; then
+	   if !	mkdir -p "${bkpdir}"; then
+		   msgdump 'error' "create backup dir failed: [${bkpdir}]"
+		   return 1
+	   fi
+	fi
+	for src in "${DESTDIR}/rc/"*; do
 		dst="${HOME}/.$(basename "${src}")"
-		if [ ! -e "${dst}" ]; then
-			msgdump 'debug' "skipped for non-exists target: [${dst}]"
-			continue
-		fi
 		if [ -h "${dst}" ]; then
 			msgdump 'debug' "unlink symbol link: [${dst}]"
 			if ! unlink "${dst}"; then
 				msgdump 'warning' "unlink symbol link: [${dst}] failed"
 				continue
 			fi
-		else
-			if mv "${dst}" "${DESTDIR}/var/bkp/"; then
-				msgdump 'info' "backup [${dst}] to [${DESTDIR}/var/bkp]"
+		elif [ -e "${dst}" ]; then
+			if mv "${dst}" "${bkpdir}"; then
+				msgdump 'info' "backup [${dst}] to [${bkpdir}]"
 			else
-				msgdump 'warning' "failed to move [${dst}] to [${DESTDIR}/var/bkp]"
+				msgdump 'warning' "failed to move [${dst}] to [${bkpdir}]"
 				continue
 			fi
 		fi
 		if ln -s "${src}" "${dst}"; then
+			msgdump 'info' "install success: [${dst}]"
+		else
 			msgdump 'warning' "failed to create symbol link: [${dst}]"
 		fi
 	done
+}
+
+doinst() {
+	msgdump 'info' 'intaller initializing'
+	if ! initialize; then
+		msgdump 'error' 'installer failed to initialize'
+		return 1
+	fi
+	msgdump 'info' "installing to [${DESTDIR}]"
+	if ! instproc; then
+		msgdump 'error' 'install process failed'
+		return 1
+	fi
+	msgdump 'info' "installing"
+	if ! inst; then
+		msgdump 'warning' "install failed"
+	fi
+	msgdump 'info' "installer finalizing"
+	if ! finalize; then
+		msgdump 'warning' "installer finalizing failed"
+	fi
 }
 
 uninst() {
@@ -259,7 +286,6 @@ main() {
 ------------------------------------------------
 EOF
 	[ -t 1 ] && printf '%b' "\033[0m\n"
-	exit
 	local OPTIND=1
 	local opt
     while getopts "d:huv" opt; do
@@ -308,31 +334,16 @@ EOH
 		return 1
 	fi
 
-	msgdump 'info' 'intaller initializing'
-	if ! initialize; then
-		msgdump 'error' 'installer failed to initialize'
-		return 1
-	fi
-	msgdump 'info' "installing to [${DESTDIR}]"
-	if ! instproc; then
-		msgdump 'error' 'install process failed'
-		return 1
-	fi
-	msgdump 'info' "install complete"
-	msgdump 'info' "formalizing"
-	if ! formalize; then
-		msgdump 'warning' "formalize failed"
+	if doinst; then
+		msgdump 'info' 'install success'
+	else
 		cat << EOF
-it seems something wrong happened while formalizing,
+it seems something wrong happened during install,
 please refer to the ${LOGFILE} for more information
 bug report: https://github.com/oxnz/shell-utils/issues
 EOF
+		return 1
 	fi
-	msgdump 'info' "installer finalizing"
-	if ! finalize; then
-		msgdump 'warning' "installer finalizing failed"
-	fi
-	msgdump 'info' 'install success'
 }
 
 main $@

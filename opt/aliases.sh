@@ -36,7 +36,7 @@ fi
 
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
-which notify-send > /dev/null && alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+which notify-send > /dev/null 2>&1 && alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
 # some more ls aliases
 # specify format {{{
@@ -72,8 +72,8 @@ alias beep='printf "\007"'
 #}}}
 
 # command wrapper {{{
-which svn-color > /dev/null && alias svn='svn-color'
-which define > /dev/null && alias define='define -d ~/.shell/data/define'
+which svn-color > /dev/null 2>&1 && alias svn='svn-color'
+which define > /dev/null 2>&1 && alias define='define -d ~/.shell/data/define'
 #}}}
 
 # override default vesion or default path command {{{
@@ -87,7 +87,7 @@ which define > /dev/null && alias define='define -d ~/.shell/data/define'
 
 #new command {{{
 alias now='/bin/date +"%F %T"'
-which go > /dev/null && alias goc='go build'
+which go > /dev/null 2>&1 && alias goc='go build'
 alias netstat6='netstat -A inet6'
 #}}}
 

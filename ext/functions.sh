@@ -940,7 +940,7 @@ which dos2unix > /dev/null || function dos2unix() {
 	#	2. awk '{ sub("\r$", ""); print }' dosfile.txt > unixfile.txt
 }
 
-which perror > /dev/null || function perror() {
+which perror > /dev/null 2>&1 || function perror() {
     if [ $# -eq 0 ]; then
         echo "Usage: perror errno"
         return

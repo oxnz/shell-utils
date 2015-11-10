@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+set -e
+
+exec bats ${CI:+--tap} test/{core,opt,ext}

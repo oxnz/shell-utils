@@ -437,7 +437,7 @@ function ips() {
         sub addrec { push @recs, \@_; }
         sub fmtout {
             my $fmt = "%-8s%-8s%-20s%-16s%-s\n";
-            foreach (@recs) { printf($fmt, @$_); }
+            for (@recs) { printf($fmt, @$_); }
         }
     }
 
@@ -639,16 +639,24 @@ End-Of-Help
 		return 1
 	fi
 
-    fc -n -l $((-${HISTSIZE:-1})) | perl -ane 'BEGIN {my %cmdlist}{$cmdlist{@F[0]}++}
-	END {printf("%-10s %-9s %-12s %-10s\n", "Number", "Times", "Frequency", "Command");
-	my ($i, $cnt) = (0, 0);
-	foreach my $cmd (sort {$cmdlist{$b} <=> $cmdlist{$a}} keys %cmdlist) {
-        last if ++$i > '"${n:-10}"';
-        $cnt += $cmdlist{$cmd};
-        printf("%-10d %-10d %5.2f%-8s %-10s\n", $i, $cmdlist{$cmd},
-            $cmdlist{$cmd}*100/$., "%", $cmd);
-    }
-    printf("%-6s %5d/%-5d %8.2f%%\t%-16s\n", "-", $cnt, $., $cnt*100/$., "");
+    fc -n -l $((-${HISTSIZE:-1})) | perl -anwe 'BEGIN { my %cmdlist }
+	{ $cmdlist{$F[0]}++ }
+	END {
+		printf("Number     Times     Frequency    Command\n");
+		my ($i, $cnt) = (0, 0);
+		my @item;
+		format =
+@<<<<<<<   @<<<<<<<  @##.##%        @<<<<<<<<<<<<<<<<<<<<...
+@item
+.
+		for my $cmd (sort {$cmdlist{$b} <=> $cmdlist{$a}} keys %cmdlist) {
+			last if ++$i > '"${n:-10}"';
+			$cnt += $cmdlist{$cmd};
+			@item = ($i, $cmdlist{$cmd}, $cmdlist{$cmd}*100/$., $cmd);
+			write;
+		}
+		@item = ("-",  "$cnt/$.", $cnt*100/$., "");
+		write;
 	}'
 }
 

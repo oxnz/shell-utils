@@ -933,14 +933,14 @@ EOT
     done
 }
 
-which unix2dos > /dev/null || function unix2dos() {
+which unix2dos > /dev/null 2>&1 || function unix2dos() {
     [[ "$#" -eq 0 ]] && echo "Usage: unix2dos <file>" ||
     command perl -i -p -e 's/\n/\r\n/' "$1"
 	# alternatives:
 	#	1. awk 'sub("$", "\r")' unixfile.txt > dosfile.txt
 }
 
-which dos2unix > /dev/null || function dos2unix() {
+which dos2unix > /dev/null 2>&1 || function dos2unix() {
     [[ "$#" -eq 0 ]] && echo "Usage: dos2unix <file>" ||
     command perl -i -p -e 's/\r\n/\n/' "$1"
 	# alternatives:
@@ -992,6 +992,26 @@ End-Of-Help
     find "$dir" -print | sed -e 's#[^/]*/#|____#g
     s#____|#  |#g'
 }
+
+###########################################################
+: << =cut
+=head2 httpserver
+
+use python SimpleHTTPServer module to serve
+
+=over
+
+=item Arguments
+
+(port)
+
+=back
+=cut
+###########################################################
+which python > /dev/null 2>&1 && function httpserver() {
+	python -m SimpleHTTPServer
+}
+
 ###########################################################
 : << =cut
 =head2 google
@@ -1000,7 +1020,7 @@ search google via command line
 
 =over
 
-=item Constans:
+=item Constans
 
 Google search url prefix
 

@@ -1009,7 +1009,7 @@ use python SimpleHTTPServer module to serve
 =cut
 ###########################################################
 which python > /dev/null 2>&1 && function httpserver() {
-	python -m SimpleHTTPServer
+	python -m SimpleHTTPServer "${1:-8000}"
 }
 
 ###########################################################

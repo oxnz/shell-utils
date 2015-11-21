@@ -547,7 +547,7 @@ function fs() {
                 fi
                 ;;
             E)
-                which egrep > /dev/null && local -r grep="egrep" ||
+                which egrep > /dev/null 2>&1 && local -r grep="egrep" ||
                     echo "${FUNCNAME[0]}: egrep not found, fallback to grep" >&2
                 ;;
             f)
@@ -965,7 +965,7 @@ which perror > /dev/null 2>&1 || function perror() {
     printf "error code %3d:\t$errmsg\n", $errno;' "$@"
 }
 
-which tree > /dev/null || function tree() {
+which tree > /dev/null 2>&1 || function tree() {
     local opt
     local OPTIND=1
     while getopts "h" opt; do

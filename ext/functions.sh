@@ -245,7 +245,19 @@ function fortune() {
 # convert human-readable data(and time) to seconds since epoch and vice versa
 ##############################################################################
 function epoch() {
-:
+    if [ $# -eq 3 ]; then
+        local opt="$1"
+        if [ "$opt" = "-p" ]; then
+            local ts="$2"
+            local fmt="$3"
+            tclsh <<< "puts [clock format \"$ts\" -format \"$fmt\"]"
+        else
+            echo "${FUNCNAME[0]}: invalid option: $opt" 1>&2
+            return 1
+        fi
+    else
+        tclsh <<< 'puts [clock seconds]'
+    fi
 }
 
 ############################################################

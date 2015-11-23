@@ -61,6 +61,21 @@ emergency
 
 function `su:dep` to test if the dependency was loaded, if not, `su::use` will do the dirty job to load the dependcy, otherwise just continue
 
+9. debug
+
+	__su__verbose__
+	__su__debug__
+	su::log
+	su::err
+	su::errx
+	su::warn
+
+10. make all things rock solid
+
+	make them ready for production env use
+
+11. su::def to print the function definition
+
 cadidate
 --------
 

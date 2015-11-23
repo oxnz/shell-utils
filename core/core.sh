@@ -55,11 +55,14 @@ su::use() {
 
 # test if mod is loaded
 su::using() {
-	if [ $# -ne 1 -o -z "$1" ]; then
+	if [ $# -ne 1 ]; then
 		echo "Usage: ${FUNCNAME[0]} <name>" >&2
 		return 1
 	fi
 	local mod="$1"
+	if [ ! -e "$mod" ]; then
+		return 1
+	fi
 	case ":${su__mods}:" in
 		*:"$mod":*)
 			return 0
@@ -103,9 +106,9 @@ su::lsmod() {
 	done
 }
 
-# depends on
+# indicate depends on relations
 su::dep() {
-	if [ $# -ne 1 -o -z "$1"]; then
+	if [ $# -ne 1 -o -z "$1" ]; then
 		echo "Usage: ${FUNCNAME[0]} <name>" >&2
 		return 1
 	fi
@@ -114,6 +117,15 @@ su::dep() {
 	if su::using "$mod"; then
 		echo "already loaded"
 	else
-		su:use "$mod"
+		su::use "$mod"
 	fi
 }
+
+# show definition of the variable
+su::def() {
+	local v
+	for v; do
+		echo "$v"
+	done
+}
+

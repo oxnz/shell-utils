@@ -187,6 +187,26 @@ End-Of-Usage
 }
 
 ################################################################################
+# generate random number
+################################################################################
+function roll() {
+	if [ $# -eq 0 ]; then
+		echo "$RANDOM"
+	elif [ $# -eq 1 ]; then
+		local max="$(($1))"
+		if [ "$max" -gt 0 ]; then
+			echo "$((RANDOM % max))"
+		else
+			echo "${FUNCNAME[0]}: invalid max val: $1" 1>&2
+			return 1
+		fi
+	else
+		echo "Usage: ${FUNCNAME[0]} [max]"
+		return 1
+	fi
+}
+
+################################################################################
 # generate random stuff
 ################################################################################
 function random() {
@@ -209,7 +229,7 @@ function random() {
     done
     shift $((OPTIND-1))
 
-    tr -dc A-Za-z0-9_ < /dev/urandom | head -c ${len:-16} | xargs
+    LC_ALL=C tr -dc A-Za-z0-9_ < /dev/urandom | head -c ${len:-16} | xargs
 }
 
 ##############################################################################

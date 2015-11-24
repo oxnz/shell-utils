@@ -4,6 +4,7 @@ TODO
 emergency
 ---------
 
+0. msgdump function add color support
 1. impl plugins manage system
 
 	* supported options:
@@ -132,3 +133,8 @@ some other functions
 	todo() {:;}
 	function remind() {
 	}
+
+roll function {
+	n = $1
+	random (n)
+}

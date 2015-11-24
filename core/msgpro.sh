@@ -4,8 +4,12 @@ VERBOSE=3
 su::msgdump() {
 	local OPTIND=1
 	local opt
-	while getopts "hv" opt; do
+	local verbose=0
+	while getopts "Chv" opt; do
 		case "$opt" in
+			C)
+				local color=false
+				;;
 			h)
 				cat << EOF
 Usage: ${FUNCNAME[0]} [option] level message
@@ -21,36 +25,45 @@ EOF
 return
 				;;
 			v)
-				VERBOSE=$((VERBOSE+1))
+				$((++verbose))
 				;;
 		esac
 	done
 	shift $((OPTIND-1))
 	if [ $# -lt 2 ]; then
-		su::log 'error' "2 or more arguments expected, but $# found"
+		su::msgdump 'error' "2 or more arguments expected, but $# found"
 		return 1
 	fi
 	local level="$1"
-	case "$level" in
-		debug)
-			if [ $VERBOSE -le 0 ]; then
-				return
-			fi
-			;;
-		info)
-			if [ $VERBOSE -le 1 ]; then
-				return
-			fi
-			;;
-		warning)
-			if [ $VERBOSE -le 2 ]; then
-				return
-			fi
-			;;
-		error)
-			;;
-	esac
 	shift
 	local msg="$*"
-	echo "[${FUNCNAME[1]} ${level}] $msg"
+	case "$level" in
+		debug)
+			verbose=3
+			;;
+		info)
+			verbose=2
+			;;
+		warning)
+			verbose=1
+			;;
+		error)
+			verbose=0
+			;;
+		*)
+			msg="su::msgdump unsupported level '${level}' for msg: ${msg}"
+			su::msgdump 'error' "$msg"
+			return 1
+			;;
+	esac
+	if [ "$verbose" -gt "$VERBOSE" ]; then
+	   	return
+	fi
+	local func="${FUNCNAME[1]}"
+	if [ -n "$func" ]; then
+		msg="[${func} ${level}] $msg"
+	else
+		msg="[${level}] $msg"
+	fi
+	printf "%b\n" "$msg"
 }

@@ -39,12 +39,24 @@
 
 __su__log__level__=debug
 __su__log__file__="${SHELL_UTILS_HOME}/var/log/shell.log"
+__su__log__lino__interval__="$((5*60))"
+__su__log__lino__max__=10000
 
 # log file is large enough, new log file needed
 su::log::roll() {
-	local file="${__su__log__file__}-$(date '+%F').tar.gz"
-	if tar czf "$file" "${__su__log__file__}"; then
-		:>"${__su__log__file__}"
+	local file="${__su__log__file__}-$(date '+%s').tar.gz"
+	while [ -e "$file" ]; do
+		sleep "0.$((RANDOM%10))"
+		file="${__su__log__file__}-$(date '+%s').tar.gz"
+	done
+	local dname="$(dirname "${__su__log__file__}")"
+	local fname="$(basename "${__su__log__file__}")"
+	if tar czf "$file" -C "$dname" "$fname"; then
+		if :>"${__su__log__file__}"; then
+			su::log::info "log file roll to $file"
+		else
+			su::msgdump::error "failed to truncate log file: ${__su__log__file}"
+		fi
 	else
 		su::msgdump::error "${FUNCNAME[0]}: failed to create archive: $file"
 	fi
@@ -153,6 +165,15 @@ su::log() {
 				msg="[${level}][$(date '+%F %T %Z') $(pwd)] ${msg}"
 			fi
 			echo "$msg" >> "${__su__log__file__}"
+			local ts="$(date '+%s')"
+			ts="$((ts%__su__log__lino__interval__))"
+			local lino="$(wc -l "${__su__log__file__}" | awk '{print $1}')"
+			if [ "$lino" -gt "${__su__log__lino__max__}" -a "$ts" -eq 0 ]; then
+				if ! su::log::roll; then
+					su::msgdump::error \
+						"failed to roll when log file lino reached max"
+				fi
+			fi
 			;;
 		*)
 			su::log::error "invalid level: '$level' for msg: '$msg'"

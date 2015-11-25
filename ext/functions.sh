@@ -17,18 +17,6 @@ page with C<pod2man>.
 
 =head1 FUNCTIONS
 =cut
-################################################################################
-: << =cut
-=head2 log
-
-a simple logger
-=cut
-# Constants: LOGFILE
-################################################################################
-function log() {
-    local -r LOGFILE="${SHELL_UTILS_HOME}/var/log/shell.log"
-    echo "[$(date '+%F %T %Z') $(pwd) ${FUNCNAME[1]}] $@" >> "$LOGFILE"
-}
 
 ################################################################################
 # query weather info
@@ -398,20 +386,6 @@ function __initialize__() {
         fi
     done
 
-    # set trap to intercept the non-zero return code of last program
-    function _err() {
-        local ecode=$?
-        local cmd
-        cmd="$(history | tail -1 | sed -e 's/^ *[0-9]* *//')"
-        log "command: [${cmd}] exit code: [${ecode}]"
-    }
-    trap _err ERR
-
-    # do some stuff before exit
-    function _exit() {
-        log "${USER} leaves $(tty)"
-    }
-    trap _exit EXIT
 }
 __initialize__
 unset __initialize__
@@ -776,6 +750,7 @@ function apt-hist() {
             apt-hist list | grep --no-filename "\<$1\>"
 			;;
 		list)
+            local log
             for log in $(ls -t /var/log/dpkg.log*); do
                 [ -f "$log" ] || continue
                 if [ ${log##*.} == gz ]; then

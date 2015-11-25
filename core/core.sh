@@ -60,9 +60,6 @@ su::using() {
 		return 1
 	fi
 	local mod="$1"
-	if [ ! -e "$mod" ]; then
-		return 1
-	fi
 	case ":${su__mods}:" in
 		*:"$mod":*)
 			return 0

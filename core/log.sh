@@ -37,6 +37,7 @@
 
 # log utilities for shell-utils
 
+__su__log__level__=debug
 __su__log__file__="${SHELL_UTILS_HOME}/var/log/shell.log"
 
 # log file is large enough, new log file needed
@@ -45,7 +46,7 @@ su::log::roll() {
 	if tar czf "$file" "${__su__log__file__}"; then
 		:>"${__su__log__file__}"
 	else
-		su::msgdump error "su::log::roll failed to create archive: $file"
+		su::msgdump::error "${FUNCNAME[0]}: failed to create archive: $file"
 	fi
 }
 
@@ -58,15 +59,120 @@ su::log::file() {
 		if [ -f "$file" -a -w "$file" ]; then
 			__su__log__file__="$file"
 		else
-			su::msgdump error "su::log::file: invalid file: $file"
+			su::msgdump::error "${FUNCNAME[0]}: invalid file: $file"
 			return 1
 		fi
 	else
-		su::msgdump error "su::log::file: too many arguments" 1>&2
+		su::msgdump::error "${FUNCNAME[0]}: too many arguments" 1>&2
+		return 1
+	fi
+}
+
+su::log::level() {
+	local level="${__su__log__level__}"
+	if [ $# -eq 0 ]; then
+		echo "$level"
+	elif [ $# -eq 1 ]; then
+		local opt="$1"
+		case "$opt" in
+			-h)
+				echo "Usage: ${FUNCNAME[0]} [debug|info|warning|error]"
+				;;
+			debug|info|warning|error)
+				level="$opt"
+				__su__log__level__="$level"
+				;;
+			*)
+				su::log error \
+					"${FUNCNAME[0]}: invalid option: $opt" 1>&2
+				return 1
+				;;
+		esac
+	else
+		su::log::error "${FUNCNAME[0]}: too many arguments"
+		return 1
+	fi
+}
+
+su::log::verbose() {
+	if [ $# -eq 0 ]; then
+		su::log::verbose "${__su__log__level__}"
+	elif [ $# -eq 1 ]; then
+		local opt="$1"
+		case "$opt" in
+			-h)
+				echo "Usage: ${FUNCNAME[0]} level"
+				;;
+			error|warning|info|debug)
+				local level
+				local verbose=0
+				for level in error warning info debug; do
+					if [ "$opt" = "$level" ]; then
+						echo "$verbose"
+						return
+					fi
+					verbose="$((verbose+1))"
+				done
+				;;
+			*)
+				su::msgdump::error "${FUNCNAME[0]}: invalid option: '$opt'"
+				return 1
+				;;
+		esac
+	else
+		su::msgdump::error "${FUNCNAME[0]}: too many arguments"
 		return 1
 	fi
 }
 
 su::log() {
-    echo "[$(date '+%F %T %Z') $(pwd) ${FUNCNAME[1]}] $@" >> "${__su__log__file__}"
+	if [ $# -ne 2 ]; then
+		echo "Usage: su::log level msg" >&2
+		return 1
+	fi
+	local level="$1"
+	local msg="$2"
+	local func="${FUNCNAME[1]}"
+
+	# return if verbose level is not enough
+	if [ "$(su::log::verbose "$level")" -gt "$(su::log::verbose)" ]; then
+		return
+	fi
+
+	case "$func" in
+		su::log::error|su::log::warning|su::log::info|su::log::debug)
+			func="${FUNCNAME[2]}"
+			;;
+	esac
+
+	case "$level" in
+		debug|info|warning|error)
+			if [ -n "$func" ]; then
+				msg="[${level}][$(date '+%F %T %Z') $(pwd) ${func}] ${msg}"
+			else
+				msg="[${level}][$(date '+%F %T %Z') $(pwd)] ${msg}"
+			fi
+			echo "$msg" >> "${__su__log__file__}"
+			;;
+		*)
+			su::log::error "invalid level: '$level' for msg: '$msg'"
+			return 1
+			;;
+	esac
+}
+
+su::log::error() {
+	su::log 'error' "$*"
+}
+
+su::log::warning() {
+	su::log 'warning' "$*"
+}
+
+su::log::info() {
+	su::log 'info' "$*"
+}
+
+su::log::debug() {
+	su::log 'debug' "$*"
 }

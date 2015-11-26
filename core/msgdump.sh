@@ -1,6 +1,8 @@
 # this is the msg pro for shell-utils
 
 # TODO: fix color and other stuff cause su::msgdump::error will put error in first and stop arg parse
+
+# msgdump should not have any dependencies
 su::msgdump() {
 	local OPTIND=1
 	local opt

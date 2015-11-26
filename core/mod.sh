@@ -53,7 +53,8 @@ su::use() {
 		for suffix in "-${OSTYPE}.${__SU__SHELL__}" \
 			".${__SU__SHELL__}" \
 			"-${OSTYPE}.sh" \
-			".sh"; do
+			".sh" \
+			""; do
 			f="${__SU__HOME__}/${mod}${suffix}"
 			if [ -e "$f" ]; then
 				break

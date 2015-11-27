@@ -26,7 +26,7 @@
 # Email:		yunxinyi@gmail.com
 # Created:		2015-11-22 14:32:08 CST
 # Last-update:	2015-11-22 14:32:08 CST
-# Description:  The core functions of the shell-utils
+# Description:  The core of the shell-utils
 #
 # Version:		0.0.1
 # Revision:	[None]
@@ -36,93 +36,97 @@
 # ===============================================================
 #
 
-# global variable holds all the loaded modules
-su__mods=''
+# shell type
+__SU__SHELL__="${__SU__SHELL__}"
+# shell utils home path
+__SU__HOME__="${__SU__HOME__}"
 
-# import specified semantics into current context
-su::use() {
-	if [ $# -ne 1 ]; then
-		echo "Usage: ${FUNCNAME[0]} <name>" >&2
-		return 1
-	fi
-	local mod="$1"
-	echo "loading module [$mod]"
-	if source "$mod"; then
-		su__mods="${su__mods}:$mod"
-		echo "loaded"
-	fi
-}
-
-# test if mod is loaded
-su::using() {
-	if [ $# -ne 1 ]; then
-		echo "Usage: ${FUNCNAME[0]} <name>" >&2
-		return 1
-	fi
-	local mod="$1"
-	case ":${su__mods}:" in
-		*:"$mod":*)
-			return 0
-			;;
-		*)
+# load the core stuff
+__su::bootstrap__() {
+	local shell="${__SU__SHELL__}"
+	if [ -z "$shell" ]; then
+		if [ -n "$BASH_VERSION" ]; then
+			shell='bash'
+		elif [ -n "$ZSH_VERSION" ]; then
+			shell='zsh'
+		else
+			echo "cannot detect shell type" 1>&2
 			return 1
-			;;
+		fi
+	fi
+	__SU__SHELL__="$shell"
+	if [ -z "${__SU__HOME__}" ]; then
+		local self
+		case "$shell" in
+			bash)
+				self="$BASH_SOURCE"
+				;;
+			zsh)
+				echo "${FUNCNAME}: unimplemented yet" 1>&2
+				return 1
+				;;
+			*)
+				echo "${FUNCNAME}: unsupported shell: $shell" 1>&2
+				return 1
+				;;
+		esac
+		while [ -L "$self" ]; do
+			if ! self="$(readlink "$self")"; then
+				return 1
+			fi
+		done
+		if ! self="$(dirname "$self")"; then
+			return 1
+		fi
+		if ! __SU__HOME__="$(dirname "$self")"; then
+			return 1
+		fi
+	fi
+	case "$shell" in
+	bash)
+		local mod
+		local suffix
+		for mod in msgdump \
+			env \
+			mod \
+			sig \
+			path \
+			log \
+			backup \
+			plug; do
+			for suffix in "-${OSTYPE}.${SHELL}" \
+				".${SHELL}" \
+				"-${OSTYPE}.sh" \
+				".sh"; do
+				local f="${__SU__HOME__}/core/${mod}${suffix}"
+				if [ -f "$f" ]; then
+					source "$f"
+					break
+				fi
+			done
+		done
+		;;
+	zsh)
+		echo "${FUNCNAME}: not implemented yet" 1>&2
+		return 1
+		;;
+	*)
+		echo "${FUNCNAME}: unsupported shell: $shell" 1>&2
+		return 1
+		;;
 	esac
 }
 
-# unimport essentials imported by `su::use'
-su::no() {
-	if [ $# -ne 1 ]; then
-		echo "Usage: ${FUNCNAME[0]} <name>" >&2
-		return 1
-	fi
-	local mod="$1"
-	echo "unloading module [$mod]"
-	if su::using "$mod"; then
-		"$mod::undef"
-	fi
+# load opt and ext stuff
+__su::initialize__() {
+	:
 }
 
-su::reload() {
-	if [ $# -ne 1 ]; then
-		echo "Usage: ${FUNCNAME[0]} <name>" >&2
-		return 1
-	fi
-	local mod="$1"
-	if su::using "$mod"; then
-		su::unload "$mod"
-	fi
-	su::load "$mod"
+# final stuff goes here
+__su::finalize__() {
+	:
 }
 
-# list mods
-su::lsmod() {
-	local mod
-	for mod in ${su__mods//:/ }; do
-		echo "$mod"
-	done
-}
-
-# indicate depends on relations
-su::dep() {
-	if [ $# -ne 1 -o -z "$1" ]; then
-		echo "Usage: ${FUNCNAME[0]} <name>" >&2
-		return 1
-	fi
-	local mod="$1"
-	echo "depending on module [$mod]"
-	if su::using "$mod"; then
-		echo "already loaded"
-	else
-		su::use "$mod"
-	fi
-}
-
-# show definition of the variable
-su::def() {
-	local v
-	for v; do
-		echo "$v"
-	done
-}
-
+__su::bootstrap__
+__su::initialize__
+__su::finalize__

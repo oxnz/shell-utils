@@ -24,44 +24,43 @@ case $- in
 	*) return;;
 esac
 
-if ! SHELL_UTILS_HOME="$(readlink "${BASH_SOURCE}")"; then
-	echo "readlink failed: ${BASH_SOURCE}" >&2
-	return 1
-fi
-
-if ! SHELL_UTILS_HOME="$(dirname "$(dirname "${SHELL_UTILS_HOME}")")"; then
-	echo "dirname error: ${SHELL_UTILS_HOME}" >&2
-	return 1
-fi
-
 # source shell-utils
-su::initialize() {
-	local mod f
-	PATH="$PATH:/${SHELL_UTILS_HOME}/bin"
-	for mod in core opt ext custom; do
-		mod="${SHELL_UTILS_HOME}/${mod}"
-		if [ -d "${mod}" ]; then
-			for f in "$mod"/*.sh; do
-				if [ -r "$f" ]; then
-					#echo "$f"
-					. "$f"
-				fi
-			done
-			for f in "${mod}"/*.bash; do
-				if [ -r "$f" ]; then
-					#echo $f
-					. "$f"
-				fi
-			done
-		else
-			echo "module not found: [$mod]" >&2
+__su::bootstrap__() {
+	local self="${BASH_SOURCE}"
+	while [ -L "$self" ]; do
+		if ! self="$(readlink "$self")"; then
 			return 1
 		fi
 	done
+
+	if ! self="$(dirname "$self")"; then
+		return 1
+	fi
+	if ! self="$(dirname "$self")"; then
+		return 1
+	fi
+
+	if ! source "${self}/core/core.sh"; then
+		return 1
+	fi
+
 }
-su::initialize
-unset -f su::initialize
-su::finalize() {
-:
+__su::bootstrap__
+unset -f __su::bootstrap__
+
+__su::initialize__() {
+	local mod
+	for mod in "${__SU__HOME__}"/custom; do
+		if [ -f "$mod" ]; then
+			su::use "$mod"
+		fi
+	done
+	for mod in aliases completions switches; do
+		su::use "opt/$mod"
+	done
+	for mod in autopath banner exp functions prompt; do
+		su::use "ext/$mod"
+	done
 }
-unset -f su::finalize
+__su::initialize__
+unset -f __su::initialize__

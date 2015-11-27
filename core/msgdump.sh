@@ -1,6 +1,8 @@
 # this is the msg pro for shell-utils
 
 # TODO: fix color and other stuff cause su::msgdump::error will put error in first and stop arg parse
+
+# msgdump should not have any dependencies
 su::msgdump() {
 	local OPTIND=1
 	local opt
@@ -37,6 +39,7 @@ return
 	shift
 	local msg="$*"
 	local color_code='31;1'
+	local out=1
 	case "$level" in
 		debug)
 			verbose=$((verbose+3))
@@ -49,8 +52,10 @@ return
 		warning)
 			verbose=$((verbose+1))
 			color_code='33'
+			out=2
 			;;
 		error)
+			out=2
 			;;
 		*)
 			msg="${FUNCNAME[0]}: unsupported level '${level}' for msg: ${msg}"
@@ -70,13 +75,17 @@ return
 	else
 		msg="[${level}] $msg"
 	fi
-	if [ "$color" = "true" ]; then
+	if [ -t "$out" -a "$color" = "true" ]; then
 		msg="\e[${color_code}m${msg}\e[0m"
 	fi
 	if [ "$verbose" -gt 0 ]; then
 		msg="[$(date '+%F %T %Z')] $msg"
 	fi
-	printf "%b\n" "$msg"
+	if [ "$out" -eq 1 ]; then
+		printf "%b\n" "$msg"
+	else
+		printf "%b\n" "$msg" 1>&2
+	fi
 }
 
 su::msgdump::debug() {

@@ -77,6 +77,12 @@ function `su:dep` to test if the dependency was loaded, if not, `su::use` will d
 
 11. su::def to print the function definition
 
+12. su::log is too complex, simplify su::log::roll with crontab
+
+13. use export __SU__HOME__ to do install and detect other env
+
+14. su::use should check __su__mod__skipped__ for user customize purpose
+
 cadidate
 --------
 

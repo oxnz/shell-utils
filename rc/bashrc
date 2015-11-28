@@ -58,7 +58,7 @@ __su::initialize__() {
 	for mod in aliases completions switches; do
 		su::use "opt/$mod"
 	done
-	for mod in autopath banner exp functions prompt; do
+	for mod in banner exp functions prompt; do
 		su::use "ext/$mod"
 	done
 }

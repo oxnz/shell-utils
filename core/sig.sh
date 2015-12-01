@@ -28,10 +28,10 @@
 su::sig::err() {
 	local ecode=$?
 	local cmd="$BASH_COMMAND"
-	su::msgdump::error "cmd failed: cmd=[$cmd]"
+	#su::msgdump::error "cmd failed: cmd=[$cmd]"
 	#local cmd
 	#cmd="$(history | tail -1 | sed -e 's/^ *[0-9]* *//')"
-	#su::log::error "command: [${cmd}] exit code: [${ecode}]"
+	su::log::error "command: [${cmd}] exit code: [${ecode}]"
 }
 
 # do some stuff before exit

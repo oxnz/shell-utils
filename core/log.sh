@@ -38,7 +38,7 @@
 # log utilities for shell-utils
 
 __su__log__level__=debug
-__su__log__file__="${SHELL_UTILS_HOME}/var/log/shell.log"
+__su__log__file__="${__SU__HOME__}/var/log/shell.log"
 __su__log__lino__interval__="$((5*60))"
 __su__log__lino__max__=10000
 

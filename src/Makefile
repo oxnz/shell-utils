@@ -61,7 +61,7 @@ INCDIR	=
 INCIDR	= $(addprefix -I, $(INCDIR))
 
 # ------------  name of the target  ----------------------------------------
-TARGET	:= params
+TARGET	:= abspath curses fsync killtopd params
 # All tests produced by this Makefile.  Remember to add new tests you
 # created to the list.
 TESTS =

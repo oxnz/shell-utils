@@ -205,7 +205,7 @@ END {
 function banner() {
 	echo $'\e[32mKernel:\e[m '$(uname -r)
 	echo $'\e[33mUptime:\e[m '$(uptime)
-	if which sendmail > /dev/null; then
+	if which sendmail > /dev/null 2>&1; then
 		echo $'\e[34mMail:\e[m '$(/usr/sbin/sendmail -bp 2>&1)
 	fi
 	echo $'\e[31mCrontab:\e[m'

@@ -137,6 +137,10 @@ finalize() {
 		msgdump 'error' "cannot move log file to log dir: [${LOGFILE} -> ${logdir}]"
 		return 1
 	fi
+	if ! touch "${logdir}/shell.log"; then
+		msgdump 'error' "cannot create log file: [${logdir}/shell.log]"
+		return 1
+	fi
 	msgdump 'debug' 'finalize success'
 }
 

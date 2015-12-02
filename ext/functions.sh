@@ -17,18 +17,6 @@ page with C<pod2man>.
 
 =head1 FUNCTIONS
 =cut
-################################################################################
-: << =cut
-=head2 log
-
-a simple logger
-=cut
-# Constants: LOGFILE
-################################################################################
-function log() {
-    local -r LOGFILE="${SHELL_UTILS_HOME}/var/log/shell.log"
-    echo "[$(date '+%F %T %Z') $(pwd) ${FUNCNAME[1]}] $@" >> "$LOGFILE"
-}
 
 ################################################################################
 # query weather info
@@ -187,6 +175,26 @@ End-Of-Usage
 }
 
 ################################################################################
+# generate random number
+################################################################################
+function roll() {
+	if [ $# -eq 0 ]; then
+		echo "$RANDOM"
+	elif [ $# -eq 1 ]; then
+		local max="$(($1))"
+		if [ "$max" -gt 0 ]; then
+			echo "$((RANDOM % max))"
+		else
+			echo "${FUNCNAME[0]}: invalid max val: $1" 1>&2
+			return 1
+		fi
+	else
+		echo "Usage: ${FUNCNAME[0]} [max]"
+		return 1
+	fi
+}
+
+################################################################################
 # generate random stuff
 ################################################################################
 function random() {
@@ -209,7 +217,7 @@ function random() {
     done
     shift $((OPTIND-1))
 
-    tr -dc A-Za-z0-9_ < /dev/urandom | head -c ${len:-16} | xargs
+    LC_ALL=C tr -dc A-Za-z0-9_ < /dev/urandom | head -c ${len:-16} | xargs
 }
 
 ##############################################################################
@@ -245,7 +253,19 @@ function fortune() {
 # convert human-readable data(and time) to seconds since epoch and vice versa
 ##############################################################################
 function epoch() {
-:
+    if [ $# -eq 3 ]; then
+        local opt="$1"
+        if [ "$opt" = "-p" ]; then
+            local ts="$2"
+            local fmt="$3"
+            tclsh <<< "puts [clock format \"$ts\" -format \"$fmt\"]"
+        else
+            echo "${FUNCNAME[0]}: invalid option: $opt" 1>&2
+            return 1
+        fi
+    else
+        tclsh <<< 'puts [clock seconds]'
+    fi
 }
 
 ############################################################
@@ -366,20 +386,6 @@ function __initialize__() {
         fi
     done
 
-    # set trap to intercept the non-zero return code of last program
-    function _err() {
-        local ecode=$?
-        local cmd
-        cmd="$(history | tail -1 | sed -e 's/^ *[0-9]* *//')"
-        log "command: [${cmd}] exit code: [${ecode}]"
-    }
-    trap _err ERR
-
-    # do some stuff before exit
-    function _exit() {
-        log "${USER} leaves $(tty)"
-    }
-    trap _exit EXIT
 }
 __initialize__
 unset __initialize__
@@ -437,7 +443,7 @@ function ips() {
         sub addrec { push @recs, \@_; }
         sub fmtout {
             my $fmt = "%-8s%-8s%-20s%-16s%-s\n";
-            foreach (@recs) { printf($fmt, @$_); }
+            for (@recs) { printf($fmt, @$_); }
         }
     }
 
@@ -547,7 +553,7 @@ function fs() {
                 fi
                 ;;
             E)
-                which egrep > /dev/null && local -r grep="egrep" ||
+                which egrep > /dev/null 2>&1 && local -r grep="egrep" ||
                     echo "${FUNCNAME[0]}: egrep not found, fallback to grep" >&2
                 ;;
             f)
@@ -639,16 +645,24 @@ End-Of-Help
 		return 1
 	fi
 
-    fc -n -l $((-${HISTSIZE:-1})) | perl -ane 'BEGIN {my %cmdlist}{$cmdlist{@F[0]}++}
-	END {printf("%-10s %-9s %-12s %-10s\n", "Number", "Times", "Frequency", "Command");
-	my ($i, $cnt) = (0, 0);
-	foreach my $cmd (sort {$cmdlist{$b} <=> $cmdlist{$a}} keys %cmdlist) {
-        last if ++$i > '"${n:-10}"';
-        $cnt += $cmdlist{$cmd};
-        printf("%-10d %-10d %5.2f%-8s %-10s\n", $i, $cmdlist{$cmd},
-            $cmdlist{$cmd}*100/$., "%", $cmd);
-    }
-    printf("%-6s %5d/%-5d %8.2f%%\t%-16s\n", "-", $cnt, $., $cnt*100/$., "");
+    fc -n -l $((-${HISTSIZE:-1})) | perl -anwe 'BEGIN { my %cmdlist }
+	{ $cmdlist{$F[0]}++ }
+	END {
+		printf("Number     Times     Frequency    Command\n");
+		my ($i, $cnt) = (0, 0);
+		my @item;
+		format =
+@<<<<<<<   @<<<<<<<  @##.##%        @<<<<<<<<<<<<<<<<<<<<...
+@item
+.
+		for my $cmd (sort {$cmdlist{$b} <=> $cmdlist{$a}} keys %cmdlist) {
+			last if ++$i > '"${n:-10}"';
+			$cnt += $cmdlist{$cmd};
+			@item = ($i, $cmdlist{$cmd}, $cmdlist{$cmd}*100/$., $cmd);
+			write;
+		}
+		@item = ("-",  "$cnt/$.", $cnt*100/$., "");
+		write;
 	}'
 }
 
@@ -736,6 +750,7 @@ function apt-hist() {
             apt-hist list | grep --no-filename "\<$1\>"
 			;;
 		list)
+            local log
             for log in $(ls -t /var/log/dpkg.log*); do
                 [ -f "$log" ] || continue
                 if [ ${log##*.} == gz ]; then
@@ -925,14 +940,14 @@ EOT
     done
 }
 
-which unix2dos > /dev/null || function unix2dos() {
+which unix2dos > /dev/null 2>&1 || function unix2dos() {
     [[ "$#" -eq 0 ]] && echo "Usage: unix2dos <file>" ||
     command perl -i -p -e 's/\n/\r\n/' "$1"
 	# alternatives:
 	#	1. awk 'sub("$", "\r")' unixfile.txt > dosfile.txt
 }
 
-which dos2unix > /dev/null || function dos2unix() {
+which dos2unix > /dev/null 2>&1 || function dos2unix() {
     [[ "$#" -eq 0 ]] && echo "Usage: dos2unix <file>" ||
     command perl -i -p -e 's/\r\n/\n/' "$1"
 	# alternatives:
@@ -940,7 +955,7 @@ which dos2unix > /dev/null || function dos2unix() {
 	#	2. awk '{ sub("\r$", ""); print }' dosfile.txt > unixfile.txt
 }
 
-which perror > /dev/null || function perror() {
+which perror > /dev/null 2>&1 || function perror() {
     if [ $# -eq 0 ]; then
         echo "Usage: perror errno"
         return
@@ -957,7 +972,7 @@ which perror > /dev/null || function perror() {
     printf "error code %3d:\t$errmsg\n", $errno;' "$@"
 }
 
-which tree > /dev/null || function tree() {
+which tree > /dev/null 2>&1 || function tree() {
     local opt
     local OPTIND=1
     while getopts "h" opt; do
@@ -984,6 +999,26 @@ End-Of-Help
     find "$dir" -print | sed -e 's#[^/]*/#|____#g
     s#____|#  |#g'
 }
+
+###########################################################
+: << =cut
+=head2 httpserver
+
+use python SimpleHTTPServer module to serve
+
+=over
+
+=item Arguments
+
+(port)
+
+=back
+=cut
+###########################################################
+which python > /dev/null 2>&1 && function httpserver() {
+	python -m SimpleHTTPServer "${1:-8000}"
+}
+
 ###########################################################
 : << =cut
 =head2 google
@@ -992,7 +1027,7 @@ search google via command line
 
 =over
 
-=item Constans:
+=item Constans
 
 Google search url prefix
 
@@ -1116,7 +1151,7 @@ MIT
 
 L<yunxinyi@gmail.com>
 
-Copyright (c) 2011-2014 Oxnz, All rights reserved.
+Copyright (c) 2011-2015 Oxnz, All rights reserved.
 
 =cut
 # Local variables:

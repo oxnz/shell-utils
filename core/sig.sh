@@ -25,6 +25,7 @@
 #
 
 # set trap to intercept the non-zero return code of last program
+##! @sig{ERR}
 su::sig::err() {
 	local ecode=$?
 	local cmd="$BASH_COMMAND"
@@ -35,6 +36,7 @@ su::sig::err() {
 }
 
 # do some stuff before exit
+##! @sig{EXIT}
 su::sig::exit() {
 	su::log::info "${USER}:$(tty) leaves"
 }

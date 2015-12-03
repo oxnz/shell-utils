@@ -62,6 +62,7 @@ su::log::roll() {
 	fi
 }
 
+##! @property{log.file}
 su::log::file() {
 	local file="${__su__log__file__}"
 	if [ $# -eq 0 ]; then
@@ -80,6 +81,7 @@ su::log::file() {
 	fi
 }
 
+##! @property{log.level}
 su::log::level() {
 	local level="${__su__log__level__}"
 	if [ $# -eq 0 ]; then
@@ -106,6 +108,7 @@ su::log::level() {
 	fi
 }
 
+##! @property{log.verbose}
 su::log::verbose() {
 	if [ $# -eq 0 ]; then
 		su::log::verbose "${__su__log__level__}"
@@ -137,6 +140,8 @@ su::log::verbose() {
 	fi
 }
 
+##! @api{log}
+##! @desc{log function}
 su::log() {
 	if [ $# -ne 2 ]; then
 		echo "Usage: su::log level msg" >&2
@@ -182,18 +187,22 @@ su::log() {
 	esac
 }
 
+##! @api{log.error}
 su::log::error() {
 	su::log 'error' "$*"
 }
 
+##! @api{log.warning}
 su::log::warning() {
 	su::log 'warning' "$*"
 }
 
+##! @api{log.info}
 su::log::info() {
 	su::log 'info' "$*"
 }
 
+##! @api{log.debug}
 su::log::debug() {
 	su::log 'debug' "$*"
 }

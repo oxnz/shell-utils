@@ -43,8 +43,8 @@ __su::bootstrap__() {
 	if ! source "${self}/core/core.sh"; then
 		return 1
 	fi
-
 }
+
 __su::bootstrap__
 unset -f __su::bootstrap__
 
@@ -58,7 +58,7 @@ __su::initialize__() {
 	for mod in aliases completions switches; do
 		su::use "opt/$mod"
 	done
-	for mod in banner exp functions prompt; do
+	for mod in banner functions prompt; do
 		su::use "ext/$mod"
 	done
 }

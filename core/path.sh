@@ -42,11 +42,12 @@ su::autopath() {
 }
 
 su::abspath() {
-	local abs
-	if abs="$(readlink -e "$1")"; then
-		echo "$abs"
-	else
-		echo "abspath: invalid file: ["$1"]" >&2
-		return 1
-	fi
+	local path="$1"
+	while [ -L "${path}" ]; do
+		if ! path="$(readlink "${path}")"; then
+			printf "$FUNCNAME: bad link: ${path}" >&2
+			return 1
+		fi
+	done
+	echo "${path}"
 }

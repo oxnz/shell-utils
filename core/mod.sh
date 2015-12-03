@@ -56,7 +56,7 @@ su::use() {
 			".sh" \
 			""; do
 			f="${__SU__HOME__}/${mod}${suffix}"
-			if [ -e "$f" ]; then
+			if [ -e "$f" -a "$f" ]; then
 				break
 			fi
 		done

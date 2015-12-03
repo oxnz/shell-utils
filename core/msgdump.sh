@@ -2,6 +2,11 @@
 
 # TODO: fix color and other stuff cause su::msgdump::error will put error in first and stop arg parse
 
+##! @desc: print msg with trailing newline
+su::puts() {
+	printf '%b\n' "$*"
+}
+
 # msgdump should not have any dependencies
 su::msgdump() {
 	local OPTIND=1
@@ -25,8 +30,7 @@ EOF
 return
 				;;
 			v)
-				echo "I"
-				$((++verbose))
+				((++verbose))
 				;;
 		esac
 	done
@@ -82,9 +86,9 @@ return
 		msg="[$(date '+%F %T %Z')] $msg"
 	fi
 	if [ "$out" -eq 1 ]; then
-		printf "%b\n" "$msg"
+		su::puts "${msg}"
 	else
-		printf "%b\n" "$msg" 1>&2
+		su::puts "${msg}" >&2
 	fi
 }
 

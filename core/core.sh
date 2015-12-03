@@ -36,10 +36,18 @@
 # ===============================================================
 #
 
+#---------------------------global switches-----------------------------
+#set -e
+#set -u
+set -o pipefail
+#===========================global variables============================
+
+#---------------------------global variables----------------------------
 # shell type
 __SU__SHELL__="${__SU__SHELL__}"
 # shell utils home path
 __SU__HOME__="${__SU__HOME__}"
+#===========================global variables============================
 
 # load the core stuff
 __su::bootstrap__() {

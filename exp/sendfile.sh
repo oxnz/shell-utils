@@ -1,6 +1,27 @@
-#!/usr/bin/env sh
+#!/bin/sh
 #
-# ===============================================================
+# Copyright (c) 2015 0xnz. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+#
+# ---------------------------------------------------------------
 #
 # Filename:	sendfile.sh
 #
@@ -15,18 +36,17 @@
 # Revision history:	[None]
 # Date Author Remarks:	[None]
 #
-# License:
-# Copyright (c) 2015 Oxnz
-#
-# Distributed under terms of the [LICENSE] license.
-# [license]
-#
 # ===============================================================
 #
 
 set -e
 set -u
 set -o pipefail
+
+##! @desc: identical to echo, but more portable
+puts() {
+	printf '%b\n' "$*"
+}
 
 ##! @desc: send or recv file over socket
 ##! @param.1: file
@@ -40,29 +60,29 @@ main() {
 		case "$opt" in
 			r)
 				if [ -n "${act}" -a "${act}" != 'recvfile' ]; then
-					echo "multiple action specified"
+					puts "multiple action specified"
 					return 1
 				fi
 				act='recvfile'
 				;;
 			s)
 				if [ -n "${act}" -a "${act}" != 'sendfile' ]; then
-					echo "multiple action specified"
+					puts "multiple action specified"
 					return 1
 				fi
 				act='sendfile'
 				;;
 			h)
-				echo "Usage: $0 <file> <host> <port>"
+				puts "Usage: $0 <file> <host> <port>"
 				return
 				;;
 			*)
-				echo "$0: invalid arguments: $OPTARG" >&2
+				puts "$0: invalid arguments: $OPTARG" >&2
 				return 1
 				;;
 		esac
 	done
-	shift $((OPTIND-1))
+	shift $(( OPTIND - 1 ))
 	if [ $# -ne 3 ]; then
 		main -h >&2
 		return 1
@@ -73,15 +93,15 @@ main() {
 	local port="$3"
 	case "$0" in
 		sendfile*)
-			echo "send '${file}' > ${host}:${port}"
+			puts "send '${file}' > ${host}:${port}"
 			cat "${file}" > "/dev/tcp/${host}/${port}"
 			;;
 		recvfile*)
-			echo "recv '${file}' < ${host}:${port}"
+			puts "recv '${file}' < ${host}:${port}"
 			cat < "/dev/tcp/${host}/${port}" > "${file}"
 			;;
 		*)
-			echo "$0: action unspecified: -r(recvfile) or -s(sendfile)" >&2
+			puts "$0: action unspecified: -r(recvfile) or -s(sendfile)" >&2
 			return 1
 			;;
 	esac

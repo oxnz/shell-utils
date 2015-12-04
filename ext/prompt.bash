@@ -62,7 +62,7 @@ esac
 #	of this variable are executed as a regular Bash command just before Bash
 #	displays a prompt.
 
-function prompt_command() {
+prompt_command() {
     GIT_PS1_SHOWUPSTREAM='auto' \
     GIT_PS1_SHOWDIRTYSTATE='Y' \
     GIT_PS1_SHOWSTASHSTATE='Y' \

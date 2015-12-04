@@ -3,7 +3,7 @@
 # ref: http://openweathermap.org/current
 # TODO: use ip2loc get location, then get weather by coord
 ################################################################################
-function weather() {
+weather() {
     if [ $# -ne 1 ]; then
         echo "Usage: ${FUNCNAME[0]} [option] <city>" >&2
         return 1

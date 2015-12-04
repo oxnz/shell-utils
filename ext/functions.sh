@@ -27,7 +27,7 @@ page with C<pod2man>.
 convert ip address to location info
 =cut
 ################################################################################
-function ip2loc() {
+ip2loc() {
     local opt
     local OPTIND=1
     while getopts "hv" opt; do
@@ -64,7 +64,7 @@ function ip2loc() {
 test if variable is specified type
 =cut
 ################################################################################
-function isnum() {
+isnum() {
     local opt
     local OPTIND=1
     while getopts ":hf:q" opt; do
@@ -140,7 +140,7 @@ End-Of-Usage
 ################################################################################
 # generate random number
 ################################################################################
-function roll() {
+roll() {
 	if [ $# -eq 0 ]; then
 		echo "$RANDOM"
 	elif [ $# -eq 1 ]; then
@@ -160,7 +160,7 @@ function roll() {
 ################################################################################
 # generate random stuff
 ################################################################################
-function random() {
+random() {
     local opt
     local OPTIND=1
     while getopts 'hl:' opt; do
@@ -186,7 +186,7 @@ function random() {
 ##############################################################################
 # godoc use less
 ##############################################################################
-function godoc() {
+godoc() {
     command godoc "$@" | less
 }
 
@@ -198,7 +198,7 @@ function godoc() {
 the classic fortune alternative
 =cut
 ##############################################################################
-function fortune() {
+fortune() {
     local f="${HOME}/.shell/data/fortune"
     local nline
     nline=$(wc -l "$f")
@@ -215,7 +215,7 @@ function fortune() {
 ##############################################################################
 # convert human-readable data(and time) to seconds since epoch and vice versa
 ##############################################################################
-function epoch() {
+epoch() {
     if [ $# -eq 3 ]; then
         local opt="$1"
         if [ "$opt" = "-p" ]; then
@@ -239,7 +239,7 @@ used to get user answer interactivly
 =cut
 # Options:
 ############################################################
-function confirm() {
+confirm() {
     local -a args="${@}"
     local opt
     local OPTIND=1
@@ -332,7 +332,7 @@ End-Of-Help
 # initialize the utilities, define some useful hook(s)
 # trap signal(s)
 ################################################################################
-function __initialize__() {
+__initialize__() {
     if ! typeset -f command_not_found_handle > /dev/null; then
         function command_not_found_handle() {
             echo "${SHELL:-bash}: $1: command not found"
@@ -358,7 +358,7 @@ unset __initialize__
 
 colorized man
 =cut
-function man () {
+man () {
 	env \
 	LESS_TERMCAP_mb=$'\E[01;31m' \
 	LESS_TERMCAP_md=$'\E[01;34m' \
@@ -380,7 +380,7 @@ function man () {
 look up similar word(s) in *nix's dict
 =cut
 #########################################
-function words() {
+words() {
     local word
     for word; do
         grep "$word" /usr/share/dict/words
@@ -399,7 +399,7 @@ show ip addr and scope, etc about every NIC found
 ################################################################################
 case "$(uname -s)" in
 	Linux)
-function ips() {
+ips() {
     ip -family inet -oneline address show | perl -ne '
     {
         my @recs;
@@ -436,7 +436,7 @@ extract file(s) from compressed status
 # Parameter(s):
 #   compressed files
 ################################################################################
-function extract() {
+extract() {
     local opt
     local OPTIND=1
     while getopts "hv" opt; do
@@ -502,7 +502,7 @@ fi
 # find a pattern in a set of files and highlight them
 # see http://tldp.org/LDP/abs/html/sample-bashrc.html
 ################################################################################
-function fs() {
+fs() {
     local opt
     local OPTIND=1
     while getopts "d:Ef:hI" opt; do
@@ -560,7 +560,7 @@ End-Of-Usage
 ################################################################################
 # find file
 ################################################################################
-function ff() {
+ff() {
     find . -type f -name "$@"
 }
 
@@ -577,7 +577,7 @@ function ff() {
 # Returns:
 #	None
 ################################################################################
-function histop() {
+histop() {
     local opt
     local OPTIND=1
     while getopts "hn:" opt; do
@@ -637,7 +637,7 @@ End-Of-Help
 # Returns:
 #	None
 ###########################################################
-function itunes() {
+itunes() {
 	local opt="$1"
 	shift
 	case "$opt" in
@@ -674,7 +674,7 @@ End-Of-Help
 ################################################################################
 # easy use apt-{get,cache}
 ################################################################################
-function apt-() {
+apt-() {
     local arg
     for arg; do
         case "$arg" in
@@ -707,7 +707,7 @@ function apt-() {
 #   \<,\>: word boundary in regular expression
 #   ref: http://www.linuxtopia.org/online_books/advanced_bash_scripting_guide/special-chars.html
 ################################################################################
-function apt-hist() {
+apt-hist() {
 	case "$1" in
 		install|upgrade|remove)
             apt-hist list | grep --no-filename "\<$1\>"
@@ -745,7 +745,7 @@ perform uri_encode | uri_decode
 #   ahp
 =cut
 ########################################################################
-function quote() {
+quote() {
     # candidate implementation
     #perl -MURI::Escape -e 'print uri_escape($ARGV[0]), "\n"' "$1"
     local opt
@@ -798,7 +798,7 @@ End-Of-Help
     echo $t
 }
 
-function unquote() {
+unquote() {
     printf '%b\n' "${1//%/\\x}" | tr '+' ' '
 }
 
@@ -830,7 +830,7 @@ None
 =back
 =cut
 ###########################################################
-function trash() {
+trash() {
     local -r TRASHDIR="${HOME}/.local/share/Trash"
     local -r FILEDIR="${TRASHDIR}/files"
     local -r INFODIR="${TRASHDIR}/info"
@@ -1005,7 +1005,7 @@ open search result(s) in the default browser
 =back
 =cut
 ###########################################################
-function google() {
+google() {
     local -r url="https://www.google.com.hk/search?hl=en#newwindow=1&q="
 	case "$1" in
 		"" | -h | --help)
@@ -1028,11 +1028,11 @@ function google() {
 all the info that dig can find
 =cut
 ###########################################################
-function digdug() {
+digdug() {
     dig +nocmd "$1" any +multiline +noall +answer
 }
 
-function man2pdf() {
+man2pdf() {
     if [ $# -ne 2 ]; then
         echo "Usage: ${FUNCNAME[0]} <man> <pdf>" >&2
         return
@@ -1040,7 +1040,7 @@ function man2pdf() {
     man -t "$1" | ps2pdf - "$2"
 }
 
-function todo() {
+todo() {
     echo "see https://docs.python.org/3.2/library/dbm.html"
     cat <<End-Of-Usage
     "TODO: dbm"
@@ -1060,7 +1060,7 @@ End-Of-Usage
 dump var after tidle expand, command substitute, etc.
 =cut
 ###########################################################
-function vardump() {
+vardump() {
 	local -i i=0
     local arg
 	for arg; do
@@ -1071,7 +1071,7 @@ function vardump() {
 }
 
 # TODO: add apply, map, filter, reduce function
-function apply() {
+apply() {
     if [ $# -ne 2 ]; then
         echo "Usage: apply input-cmd process-cmd" >&2
         return 1
@@ -1083,7 +1083,7 @@ function apply() {
     done
 }
 
-function filter() {
+filter() {
     if [ $# -ne 2 ]; then
         echo "Usage: filter input-cmd filter-cmd" >&2
         return 1
@@ -1097,7 +1097,7 @@ function filter() {
     done
 }
 
-function __finalize__() {
+__finalize__() {
     for func in man words ips extract histop itunes; do
         readonly -f $func > /dev/null
     done

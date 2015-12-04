@@ -24,7 +24,7 @@
 # ===============================================================
 #
 
-function main() {
+main() {
     local opt
     local OPTIND=1
     while getopts "h" opt; do

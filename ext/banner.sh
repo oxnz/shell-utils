@@ -6,7 +6,7 @@
 # ref: Unicode Characters in the Box Drawing Block
 # ref: http://www.fileformat.info/info/unicode/block/box_drawing/images.htm
 ################################################################################
-function msgbox() {
+msgbox() {
 	local OPTIND=1
 	local opt
 	local width=${COLUMNS:-80}
@@ -202,7 +202,7 @@ END {
 }
 
 # show banner
-function banner() {
+banner() {
 	echo $'\e[32mKernel:\e[m '$(uname -r)
 	echo $'\e[33mUptime:\e[m '$(uptime)
 	if which sendmail > /dev/null 2>&1; then

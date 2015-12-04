@@ -25,7 +25,7 @@
 #
 
 ##! @desc: stack trace utility
-function pstack() {
+pstack() {
 	local i
 	printf -- '----------------stack trace-------------------\n'
 	for ((i = ${#FUNCNAME[@]}-1; i >= 0; --i)); do

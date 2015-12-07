@@ -1,30 +1,45 @@
-#!/usr/bin/env sh
+#!/bin/sh
 #
-#================================================================
+# Copyright (c) 2015 0xnz. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+#
+#----------------------------------------------------------------
 #
 # Filename: install.sh
 #
 # Author:       Oxnz
 # Email:        yunxinyi@gmail.com
 # Created:      [2014-12-09 19:11:50 CST]
-# Last-update:  2014-12-09 19:11:50 CST
+# Last-update:  [2015-12-04 19:11:50 CST]
 # Description:  ANCHOR
 #
-# Version:		0.0.1
-# Revision:	[None]
-# Revision history:	[None]
-# Date Author Remarks:	[None]
-#
-# License:
-# Copyright (c) 2013 Oxnz
-#
-# Distributed under terms of the [LICENSE] license.
-# [license]
+# Version:		0.2.2
+# Revision:		[None]
 #
 #================================================================
 #
 
 set -e
+set -u
+set -o pipefail
 
 PROGNAME='INSTALL'
 # version info, ref [http://semver.org] for more information
@@ -36,30 +51,51 @@ VERSION="${MAJORVER}.${MINORVER}.${PATCHVER}-${RELEASE}"
 
 # output
 VERBOSE=1
-DEBUG=0
+DEBUG=false
 
 # specify the install destination directory
 PREFIX="${HOME}"
-DESTDIR="${DESTDIR:-${HOME}/.shell}"
+DESTDIR="${DESTDIR:-${PREFIX}/.shell-utils}"
 LOGFILE=
+TEMPTAR=
 
 # url for the archive
 ARCHURL='https://github.com/oxnz/shell-utils/archive/v0.1.0.tar.gz'
 REPOURL='https://github.com/oxnz/shell-utils'
 
+puts() {
+	printf '%b\n' "$*"
+}
+
+##! @desc: test if given program exists
+hascmd() {
+	local prog="$1"
+	which "$prog" > /dev/null 2>&1
+}
+
+openlog() {
+	if LOGFILE="$(mktemp)"; then
+		msgdump 'info' "open log file: '$LOGFILE'"
+	else
+		msgdump 'warning' "cannot create logfile"
+		return 1
+	fi
+}
+
 msgdump() {
 	if [ $# -lt 2 ]; then
-		msgdump "error" "msgdump: 2+ arguments expected, but $# found: '$@'"
+		msgdump "error" "msgdump: 2+ arguments expected, but $# found: '$*'"
 		return 1
 	fi
 	local color=
-	local level="$(echo "$1" | tr '[:lower:]' '[:upper:]')"
+	local norm='\033[m'
+	local level="$(puts "$1" | tr '[:lower:]' '[:upper:]')"
 	shift
 	local msg="$*"
 	local out=1
 
 	if [ -f "${LOGFILE}" ]; then
-		echo "[${level}] ${msg}" >> "${LOGFILE}"
+		puts "[${level}] ${msg}" >> "${LOGFILE}"
 	fi
 
 	case "${level}" in
@@ -82,141 +118,191 @@ msgdump() {
 			out=2
 			;;
 		*)
-			msgdump 'error' "unexpected level: [${level}]"
+			msgdump 'warning' "unexpected level: [$level], msg: [$msg]"
 			;;
 	esac
 
-	if [ "${out}" -eq 1 ]; then
-		if [ -t 1 ]; then
-			printf '%b' "${color}[${level}]\033[0m ${msg}\n"
+	[ -t "$out" ] && level="${color}${level}${norm}"
+	puts "[$level] $msg" >&"${out}"
+}
+
+cleanup() {
+    local error=0
+    msgdump 'info' 'cleaning up ...'
+    if [ -f "$TEMPTAR" ]; then
+        msgdump 'info' "remove temporary file: '$TEMPTAR'"
+        if ! unlink "$TEMPTAR"; then
+            msgdump 'warning' "cannot remove temporary file: '$TEMPTAR'"
+        fi
+    fi
+    msgdump 'info' 'clean up successfully'
+}
+
+##! @desc: signal handler
+sigproc() {
+	local intrrupted="${1:-false}"
+	if $interrupted; then
+		if cleanup; then
+			msgdump 'warning' 'interrupted, abort'
 		else
-			echo "[${level}] ${msg}"
+			msgdump 'error' 'clean up falied, please remove manually'
 		fi
 	else
-		if [ -t 2 ]; then
-			printf '%b' "${color}[${level}]\033[0m ${msg}\n" >&2
-		else
-			echo "[${level}] ${msg}" >&2
-		fi
+		trap 'sigproc true' INT TERM
+		puts '[press ctrl-c again to terminate]'
 	fi
 }
 
+download() {
+    local url="$1"
+    local dst="$2"
+    trap "unlink "$dst"" INT TERM
+    msgdump 'info' "downloading to $dst ..."
+    if hascmd wget; then
+        msgdump 'debug' "wget $url -O $dst"
+        if ! wget -nv "$url" -O "$dst"; then
+            [ -f "$dst" ] && unlink "$dst"
+            return 1
+        fi
+    elif hascmd curl; then
+        msgdump 'debug' "curl -o $dst $url"
+        if ! curl -o "$dst" "$url"; then
+            [ -f "$dst" ] && unlink "$dst"
+            return 1
+        fi
+    else
+        msgdump 'error' "no download tool found"
+        msgdump 'error' "unable to download shell-utils"
+        return 1
+    fi
+    msgdump 'info' 'download complete'
+}
+
+##! @param.1: tar archive
+##! @param.2: dest dir
+extract() {
+    local archive="$1"
+	local destdir="$2"
+
+    msgdump 'info' "extracting archive: [${tar}] to [$destdir] ..."
+	# XXX need to preserve permissions when decompressing
+	if ! tar pzxf "${archive}" -C "${DESTDIR}"; then
+		if $DEBUG; then
+			msgdump 'error' "extract failed: [tar pzxf $archive -C $destdir]"
+		else
+			msgdump 'error' "extract failed: '$archive'"
+		fi
+		return 1
+	fi
+	msgdump 'info' 'extract complete'
+}
+
 # pre-install process
-initialize() {
-	case "$(basename "$0")" in
+# * detect user os env
+# * setup required options
+# * detect local install or
+# * git clone or
+# * download->extract or
+preinst() {
+	msgdump 'info' 'pre install processing ...'
+	msgdump 'info' 'pre install checking ...'
+	if [ -n "$ZSH_VERSION" ]; then
+		emulate sh > /dev/null 2>&1 || true
+	else
+		case "$(set -o 2 > /dev/null)" in
+			*posix*) :
+				set -o posix
+				;;
+			*)
+				:
+				;;
+		esac
+	fi
+	# Don't use :- since 4.3BSD and earlier shells don't like it.
+	[ -n "${SHELL-/bin/sh}" ] && case "$SHELL" in
 		csh|tcsh)
 			msgdump 'warning' "support for $0 is incomplete for now"
 			msgdump 'warning' "please do not use in production"
 			;;
 		ash)
 			msgdump 'error' "sorry, ash is not supported for now"
+			return 1
+			;;
+		/bin/bash)
+			msgdump 'debug' "install for shell: [$SHELL]"
+			;;
+		/bin/sh)
+			msgdump 'debug' "install for shell: [$SHELL]"
 			;;
 		*)
-			msgdump 'debug' "install for shell: [$0]"
+			msgdump 'error' "unsupported shell: [$SHELL]"
+			return 1
 			;;
 	esac
 	if [ -e "${DESTDIR}" ]; then
-		msgdump 'error' "destination already exists: [${DESTDIR}]"
-		return 1
+		if [ -d "$DESTDIR" -a -s "$DESTDIR/core/core.sh" ]; then
+			# already have all the stuff, just need to install
+			openlog || true
+			msgdump 'info' 'previous installation detected, direct to install'
+			return
+		else
+			msgdump 'error' "destination already exists: [${DESTDIR}]"
+			return 1
+		fi
 	fi
 
-	if ! LOGFILE="$(mktemp)"; then
-		msgdump 'error' "cannot create logfile"
-		return 1
+	if hascmd 'git'; then
+		msgdump 'info' "retrieve from repo: $REPOURL"
+		trap "rm -rf "${DESTDIR}"" INT TERM
+		if ! git clone "${REPOURL}" "${DESTDIR}"; then
+			msgdump 'error' 'git clone failed'
+			return 1
+		fi
+	else
+		local tmp
+		if ! tmp="$(mktemp)"; then
+            msgdump 'error' 'cannot create temporary file'
+            return 1
+        fi
+        if ! download "$ARCHURL" "$tmp"; then
+            msgdump 'error' 'download failed'
+            return 1
+        fi
+        if ! extract "$tmp" "$DESTDIR"; then
+            msgdump 'error' 'extract failed'
+            return 1
+        fi
 	fi
+	msgdump 'info' 'pre install success'
 }
 
 # post-install process
-finalize() {
+postinst() {
+	msgdump 'info' 'post install processing ...'
 	logdir="${DESTDIR}/var/log"
+	logfile="$logdir/install.log"
 	if [ ! -e "${logdir}" ] && ! mkdir -p "${logdir}"; then
 		msgdump 'error' "cannot create log dir: [${logdir}]"
 		return 1
 	fi
-	if ! mv "${LOGFILE}" "${logdir}/install.log"; then
+	if mv "${LOGFILE}" "${logfile}"; then
+		LOGFILE="$logfile"
+	else
 		msgdump 'error' "cannot move log file to log dir: [${LOGFILE} -> ${logdir}]"
 		return 1
 	fi
-	if ! touch "${logdir}/shell.log"; then
-		msgdump 'error' "cannot create log file: [${logdir}/shell.log]"
+	if ! : > "${logdir}/shell.log"; then
+		msgdump 'warning' "cannot create log file: [${logdir}/shell.log]"
 		return 1
 	fi
-	msgdump 'debug' 'finalize success'
+	msgdump 'info' 'post install success'
 }
 
-# install process
-if which git > /dev/null; then
-instproc() {
-	trap "rm -rf "${DESTDIR}"" INT HUP QUIT TERM KILL
-	if ! git clone "${REPOURL}" "${DESTDIR}"; then
-		msgdump 'debug' 'git return non-zero status'
-		return 1
-	fi
-	if [ ! -d "${DESTDIR}" ]; then
-		# signal caught, incomplete repo was removed
-		return 1
-	fi
-}
-else
-instproc() {
-	msgdump 'info' "retrieve archive from uri: [${ARCHURL}]"
-	local archive
-	if ! archive="$(mktemp)"; then
-		msgdump 'error' 'cannot create temporary archive'
-		return 1
-	else
-		trap "rm -f "${archive}"" INT HUP QUIT TERM KILL
-	fi
-	if which wget > /dev/null; then
-		if wget -nv "${ARCHURL}" -O "${archive}"; then
-			msgdump 'debug' "download success: [file=${archive}]"
-		else
-			msgdump 'error' "unable to download shell-utils"
-			return 1
-		fi
-	elif which curl > /dev/null; then
-		msgdump 'debug' "'wget' not found, fallback to curl"
-		if curl -o "${archive}" "${ARCHURL}"; then
-			msgdump 'debug' "download success: [file=${archive}]"
-		else
-			msgdump 'error' "unable to download shell-utils"
-			return 1
-		fi
-	else
-		msgdump 'error' "cannot find 'wget' or 'curl' which is used to download the shell-utils"
-	fi || msgdump 'error' "unable to download shell-utils"
-	msgdump 'info' "extract archive: [${archive}] to [${DESTDIR}]"
-	local tempdir
-	if ! tempdir="$(mktemp -d)"; then
-		msgdump 'error' 'failed to create tempdir directory'
-		return 1
-	fi
-	msgdump 'debug' "tempdir directory created for extract: [${tempdir}]"
-	if ! tar pzxf "${archive}" -C "${tempdir}"; then
-		msgdump 'info' "extract failed: [tar pzxf ${archive} -C ${tempdir}]"
-		return 1
-	fi
-	msgdump 'debug' "extracted to [${tempdir}] successfully"
-	local srcdir
-	if ! srcdir="${tempdir}/$(ls "${tempdir}")"; then
-		msgdump 'error' "cannot access tempdir: [${tempdir}]"
-		return 1
-	fi
-	if [ ! -d "${srcdir}" ]; then
-		msgdump 'error' "source directory not found: [${srcdir}]"
-		return 1
-	fi
-	msgdump 'debug' "move from [${srcdir}] to [${DESTDIR}]"
-	if mv "${srcdir}" "${DESTDIR}"; then
-		msgdump 'info' "installed to [${DESTDIR}] successfully"
-	else
-		msgdump 'error' "failed to move from [${srcdir}] to [${DESTDIR}]"
-		return 1
-	fi
-	rmdir "${tempdir}" || msgdump 'warning' "unable to remove tempdir: [${tempdir}]"
-}
-fi
-
+##! @desc: install process
+# task:
+# 	1. make backup dir if needed
+#	2. backup links in $HOME dir
+#	3. create links $DESTDIR/rc/* -> $HOME/*
 inst() {
 	local src
 	local dst
@@ -240,7 +326,7 @@ inst() {
 			if mv "${dst}" "${bkpdir}"; then
 				msgdump 'info' "backup [${dst}] to [${bkpdir}]"
 			else
-				msgdump 'warning' "failed to move [${dst}] to [${bkpdir}]"
+				msgdump 'warning' "bakup [${dst}] to [${bkpdir}] failed"
 				continue
 			fi
 		fi
@@ -253,34 +339,34 @@ inst() {
 }
 
 doinst() {
-	msgdump 'info' 'intaller initializing'
-	if ! initialize; then
-		msgdump 'error' 'installer failed to initialize'
+	if ! preinst; then
+		msgdump 'error' 'pre install failed'
 		return 1
 	fi
-	msgdump 'info' "installing to [${DESTDIR}]"
-	if ! instproc; then
-		msgdump 'error' 'install process failed'
-		return 1
-	fi
-	msgdump 'info' "installing"
 	if ! inst; then
-		msgdump 'warning' "install failed"
+		msgdump 'error' "install process failed"
 	fi
-	msgdump 'info' "installer finalizing"
-	if ! finalize; then
-		msgdump 'warning' "installer finalizing failed"
+	if ! postinst; then
+		msgdump 'warning' "post install failed"
 	fi
+	msgdump 'info' 'install complete successfully'
 }
 
-uninst() {
-	msgdump 'info' "collecting information for uninstall"
+##! @desc: pre uninstall process
+##! @task.1: gather information needed for uninstall
+preuninst() {
+	msgdump 'info' 'pre uninstall processing ...'
+	msgdump 'info' 'collecting information for uninstall'
 	if DESTDIR="$(dirname "$(dirname "$(pwd)/$0")")"; then
 		msgdump 'info' "path: [${DESTDIR}]"
 	else
-		msgdump 'error' "cannot find install path"
+		msgdump 'error' 'cannot find install path'
 		return 1
 	fi
+	msgdump 'info' 'pre uninstall done'
+}
+
+uninst() {
 	local src lnk dst bkp name
 	for src in "${DESTDIR}"/rc/*; do
 		name="$(basename "${src}")"
@@ -307,59 +393,118 @@ uninst() {
 			fi
 		fi
 	done
+	msgdump 'info' 'uninstall complete successfully'
+}
+
+postuninst() {
+	msgdump 'info' 'post install processing ...'
+	msgdump 'info' 'post install done'
+}
+
+##! @desc: do uninstall process
+douninst() {
+	if ! preuninst; then
+		msgdump 'error' 'pre uninstall process failed'
+		return 1
+	fi
+	if ! uninst; then
+		msgdump 'error' 'uninstall process failed'
+		return 1
+	fi
+	if ! postuninst; then
+		msgdump 'error' 'post uninstall process failed'
+		return 1
+	fi
+	msgdump 'info' 'uninstall complete successfully'
+}
+
+banner() {
+	[ -t 1 ] && puts "\033[32;2m"
+	cat <<-EOF
+	         __         ____            __  _ __
+	   _____/ /_  ___  / / /     __  __/ /_(_) /____
+	  / ___/ __ \/ _ \/ / /_____/ / / / __/ / / ___/
+	 (__  ) / / /  __/ / /_____/ /_/ / /_/ / (__  )
+	/____/_/ /_/\___/_/_/      \__,_/\__/_/_/____/
+	------------------------------------------------
+		   shell-utils installer ${VERSION}
+	------------------------------------------------
+	EOF
+	[ -t 1 ] && puts "\033[0m"
+}
+
+hascmd realpath || realpath() {
+	local file="$1"
+	while [ -L "$file" ]; do
+		file="$(readlink "$file")"
+	done
+	local dir
+	local base
+	if [ -d "$file" ]; then
+		base="";
+		dir="$file"
+	else
+		base="/$(basename "$file")"
+		dir="$(dirname "$file")"
+	fi
+	dir="$(cd "$dir" && pwd)"
+	puts "$dir$base"
 }
 
 main() {
-	[ -t 1 ] && printf '%b' "\033[32;2m"
-	cat << EOF
-         __         ____            __  _ __
-   _____/ /_  ___  / / /     __  __/ /_(_) /____
-  / ___/ __ \/ _ \/ / /_____/ / / / __/ / / ___/
- (__  ) / / /  __/ / /_____/ /_/ / /_/ / (__  )
-/____/_/ /_/\___/_/_/      \__,_/\__/_/_/____/
-------------------------------------------------
-       Shell-utils installer ${VERSION}
-------------------------------------------------
-EOF
-	[ -t 1 ] && printf '%b' "\033[0m\n"
+	banner
+	local self="$0"
+	if [ -f "$self" ]; then
+		if ! self="$(realpath "$self")"; then
+			msgdump 'error' "realpath failed: '$self'"
+			return 1
+		fi
+		local home="$(dirname "$(dirname "$self")")"
+		if [ -d "$home" -a -s "$home/core/core.sh" ]; then
+			# already download, just install
+			DESTDIR="$home"
+		fi
+	fi
 	local OPTIND=1
 	local opt
-    while getopts "d:huv" opt; do
+	local act=''
+    while getopts "dD:hiuv" opt; do
 		case $opt in
 			d)
-				DESTDIR=$OPTARG
+				DESTDIR="$OPTARG"
 				if [ -d $DESTDIR ]; then
 					msgdump 'error' "directory already exists: [$DESTDIR]"
 					return 1
 				fi
 				;;
 			D)
-				DEBUG=1
+				DEBUG=true
 				VERBOSE=$((VERBOSE+1))
 				set -x
 				;;
 			h)
-				cat << EOH
-Usage: $0 [options]
-options:
-    -d <dir>  install to the specified DIR
-    -D	      enable debug mode
-    -h	      show this message and exit
-    -v	      specify verbose level
-EOH
+				cat <<-EOH
+				Usage: $0 [options]
+				  options:
+				    -d <dir>  install to the specified dir
+				    -D	      enable debug mode
+				    -h	      show this message and exit
+				    -v	      specify verbose level
+				EOH
 				return
 				;;
+			i)
+				act='install'
+				;;
 			u)
-				if uninst; then
-					msgdump 'info' "uninstall success"
-				else
-					msgdump 'error' "uninstall failed"
-					return 1
-				fi
-				return
+				act='uninst'
 				;;
 			v)
 				VERBOSE=$((VERBOSE+1))
+				;;
+			?)
+				# getopt will output appropriate error message
+				return 1
 				;;
 		esac
 	done
@@ -370,16 +515,49 @@ EOH
 		return 1
 	fi
 
-	if doinst; then
-		msgdump 'info' 'install success'
-	else
-		cat << EOF
-it seems something wrong happened during install,
-please refer to the ${LOGFILE} for more information
-bug report: https://github.com/oxnz/shell-utils/issues
-EOF
-		return 1
+	if [ -z "$act" ]; then
+		case "$(basename "$0")" in
+			install)
+				act='inst'
+				;;
+			uninst)
+				act='uninst'
+				;;
+		esac
 	fi
+
+	case "${act:-inst}" in
+		uninst)
+			if ! uninst; then
+				msgdump 'error' "uninstall process failed"
+				cat <<-EOF
+				you may try uninstall manually, don't bother to fire a bug
+				https://github.com/oxnz/shell-utils/issues
+				EOF
+				return 1
+			fi
+			;;
+		inst)
+			if ! doinst; then
+				cat <<-EOF
+				it seems something wrong happened during install,
+				please refer to the ${LOGFILE} for more information
+				bug report: https://github.com/oxnz/shell-utils/issues
+				EOF
+				return 1
+			fi
+			;;
+		*)
+			msgdump 'error' 'should never reached here, check code and try again'
+			return 1
+			;;
+	esac
 }
 
-main $@
+main "$@"
+
+# TODO:
+# 1. fix trap issue
+# 2. add bin install
+# 3. may use `install(1)` to do the file install
+# 4. reformat to use Makeflie to generate this install script, so the version number should generate automatically

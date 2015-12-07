@@ -1,4 +1,5 @@
-# ==============================================================================
+#!/bin/sh
+#
 # Copyright (c) 2015 0xnz. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy

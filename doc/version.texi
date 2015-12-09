@@ -1,0 +1,11 @@
+@ignore
+Copyright (C) 2015 Oxnz. All rights reserved.
+@end ignore
+
+@set LASTCHANGE Fri Dec  2 07:15:33 EDT 2015
+
+@set EDITION 1.1
+@set VERSION 1.1
+
+@set UPDATED 2 December 2015
+@set UPDATED-MONTH December 2015

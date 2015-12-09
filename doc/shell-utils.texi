@@ -1,0 +1,56 @@
+\input texinfo
+@c %**start of header
+@setfilename shell-utils.info
+@settitle Shell-Utils Reference Manual
+@afourpaper
+@include version.texi
+@c %**end of header
+
+@copying
+This text is a brief description of the features that are present in
+the shell-utils (version @value{VERSION}, @value{UPDATED}).
+
+This is Edition @value{EDITION}, last updated @value{UPDATED},
+of @cite{The Shell-Utils Reference Manual},
+for @code{shell-utils}, Version @value{VERSION}.
+
+Copyright @copyright{} 2015 Oxnz. All rights reserved.
+@end copying
+
+@titlepage
+@title Shell-Utils Reference Manual
+@subtitle Reference Documentation for Shell-Utils
+@subtitle Edition @value{EDITION}, for @code{shell-utils} Version @value{VERSION}.
+@subtitle @value{UPDATED-MONTH}
+@author Oxnz
+
+@c the following two commands start the copyright page.
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@c output the tables of contents at the begining.
+@contents
+
+@ifnottex
+@node top
+@top Shell-Utils Reference Manual
+this is a short sample texinfo file
+@end ifnottex
+
+@menu
+* Overview of Shell-Utils::	this is the first
+chapter, the only chapter in this file.
+* Index:: complete index
+@end menu
+
+@include chap1.texi
+@include chap2.texi
+
+@node Index
+@unnumbered Index
+
+@printindex cp
+
+@bye

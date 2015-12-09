@@ -1,0 +1,110 @@
+@node Overview of Shell-Utils
+@chapter Overview of Shell-Utils
+@cindex Overview of Shell-Utils
+
+@section Introduction
+Shell-Utils is a bunch of useful shell scripts as well as some scripts or binary in other languages.
+
+@image{snapshot1, 400px,, snapshot1, .png}
+
+@section Reporting Bugs
+We welcome bug reports and suggestions for any aspect of the Shell-Utils:  programs,
+documentation, installation, etc.  Please email them to @email{yunxinyi@@gmail.com}.
+Or you could open an issue at @indicateurl{https://github.com/oxnz/shell-utils/issues}.
+You can get the latest version of Shell-Utils via its home page,
+@indicateurl{https://github.com/oxnz/shell-utils}.
+
+@section Install
+@enumerate
+@item
+automatically
+
+Open your favorite terminal and type:
+@example
+@command{curl} @option{-L} 'https://raw.githubusercontent.com/oxnz/
+shell-utils/master/tool/install' | @command{sh}
+@end example
+
+or
+@example
+@command{wget} 'https://raw.githubusercontent.com/oxnz/
+shell-utils/master/tool/install' @option{-O} - | @command{sh}
+@end example
+and this will append the source command in your @file{~/.bashrc} and @file{~/.zshrc}.
+
+To specify another directory instead of the default @file{~/.shell-utils}, you need to define the @env{DESTDIR} variable like this:
+
+@example
+@command{wget} 'https://raw.githubusercontent.com/oxnz/
+shell-utils/master/tool/install' @option{-O} - | @var{DESTDIR}=/path/to/install @command{sh}
+@end example
+
+@item
+manually
+
+@enumerate
+@item
+Clone the repository
+
+@example
+@command{git} @option{clone} 'https://github.com/oxnz/shell-utils.git' \
+@file{~/.shell-utils}
+@end example
+
+@item
+Create soft link to the rc files you want to use:
+@example
+@command{ln} @option{-s} @file{~/.shell-utils/rc/bashrc} @file{~/.bashrc}
+@command{ln} @option{-s} @file{~/.shell-utils/rc/zshrc} @file{~/.zshrc}
+@end example
+@end enumerate
+
+@end enumerate
+
+@section Using Shell-Utils
+
+Already installed? just open a new terminal and try out the amazing stuff.
+
+@section Update
+
+There's two strategies for update:
+
+@enumerate
+@item
+using @command{git}
+
+@example
+@command{git} @option{pull}
+@end example
+
+@item
+using @command{skel}
+@example
+@command{skel} @option{update}
+@end example
+@end enumerate
+
+@section Customize
+If you want to override any of the default behaviors, just add your sutff in the @file{custom} directory.
+
+@section Contribution
+
+If you have ideas on how to make the project better, don't hesitate to fork and send pull requests!
+
+@enumerate
+
+@item
+manually
+@example
+@command{skel} @option{update}
+@end example
+
+@item
+automatically
+@example
+@command{skel} @option{set} @var{autoupdate} true
+# replace true with false if you want to update manually
+@end example
+
+@end enumerate
+

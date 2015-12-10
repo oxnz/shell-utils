@@ -418,6 +418,18 @@ douninst() {
 	msgdump 'info' 'uninstall complete successfully'
 }
 
+colorize() {
+	local red=31
+	local green=32
+	local yellow=33
+	local blue=34
+	local norm='\033[0m'
+	local line
+	while read -r line; do
+		puts "$line"
+	done
+}
+
 banner() {
 	[ -t 1 ] && puts "\033[32;2m"
 	cat <<-EOF
@@ -489,6 +501,8 @@ main() {
 				    -d <dir>  install to the specified dir
 				    -D	      enable debug mode
 				    -h	      show this message and exit
+					-i        perform install
+					-u        perform uninstall
 				    -v	      specify verbose level
 				EOH
 				return

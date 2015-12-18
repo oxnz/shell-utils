@@ -65,13 +65,13 @@ my @VERSION	= qw/1 0 1 alpha/;
 			skellog 'error', "cannot chdir to [$instpath]";
 			die("cannot chdir to \$instpath($instpath)\n");
 		}
-		my $cmd = 'git pull --rebase --stat origin master';
+#		my $cmd = 'git pull --rebase --stat origin master';
+		my $cmd = 'git pull';
 		print "updating...\n";
 		if (system($cmd) != 0) {
 			skellog 'error', "failed to execute command: [$cmd], return value: [$?]";
 			die("command $cmd failed\n");
 		}
-		print "success\n";
 	}
 } # end of sub command closure
 
@@ -107,7 +107,6 @@ my $stub = $optstubs{$opt} or sub {
 	exit 1;
 }->();
 $SIG{'INT'} = \&onsig;
-skellog 'error', 'hello';
 $stub->(@ARGV);
 #} end of sub main
 

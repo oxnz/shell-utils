@@ -25,12 +25,28 @@
 #include <unistd.h>
 #include <limits.h>
 
+static void usage(FILE *fp, const char *prog);
+
 int main(int argc, char *argv[]) {
 	char resolved_path[PATH_MAX];
 	int status = 0;
 	int verbose = 0;
+	int opt;
 
-	if (argc < 2) {
+	while ((opt = getopt(argc, argv, "hv")) != -1) {
+		switch (opt) {
+			case 'h':
+				usage(stdout, *argv);
+				return 0;
+			case 'v':
+				++verbose;
+				break;
+			default:
+				return 1;
+		}
+	}
+	argc -= optind;
+	if (argc < 1) {
 		fprintf(stderr, "%s: missing oprand\n"
 				"Try 'abspath --help' for more information.\n", *argv);
 		return 1;
@@ -47,4 +63,8 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	return status;
+}
+
+static void usage(FILE *fp, const char *prog) {
+	fprintf(fp, "Usage: %s [options]\n", prog);
 }

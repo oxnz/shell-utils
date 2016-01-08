@@ -206,7 +206,7 @@ extract() {
 preinst() {
 	msgdump 'info' 'pre install processing ...'
 	msgdump 'info' 'pre install checking ...'
-	if [ -n "$ZSH_VERSION" ]; then
+	if [ -n "${ZSH_VERSION:-}" ]; then
 		emulate sh > /dev/null 2>&1 || true
 	else
 		case "$(set -o 2 > /dev/null)" in

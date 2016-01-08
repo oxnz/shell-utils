@@ -53,13 +53,13 @@ su::pathmunge() {
 }
 
 su::autopath() {
-	local i
-	for i in jdk go maven; do
-		if [ -d "/usr/local/$i/bin" ]; then
-			su::pathmunge "/usr/local/$i/bin" 'after'
-		elif [ -d "/opt/$i/bin" ]; then
-			su::pathmunge "/opt/$i/bin" 'after'
-		fi
+	local ppth pth
+	for ppth in /usr/local /opt; do
+		for pth in "$ppth"/*/bin; do
+			if [ -d "$pth" ]; then
+				su::pathmunge "$pth" 'after'
+			fi
+		done
 	done
 }
 

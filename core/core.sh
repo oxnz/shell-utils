@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (c) 2015 0xnz. All rights reserved.
+# Copyright (c) 2015,2016 0xnz. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -134,7 +134,7 @@ __su::initialize__() {
 
 # final stuff goes here
 __su::finalize__() {
-	:
+	su::autopath
 }
 
 __su::bootstrap__

@@ -1114,7 +1114,7 @@ MIT
 
 L<yunxinyi@gmail.com>
 
-Copyright (c) 2011-2015 Oxnz, All rights reserved.
+Copyright (c) 2011-2016 Oxnz, All rights reserved.
 
 =cut
 # Local variables:

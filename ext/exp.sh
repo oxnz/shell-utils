@@ -1,5 +1,3 @@
-#!/bin/sh
-#
 # Copyright (c) 2015-2016 0xnz. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,15 +18,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-# ---------------------------------------------------------------
+# ===============================================================
 #
-# Filename:	stack.sh
+# Filename:	export.sh
 #
 # Author:		Oxnz
 # Email:		yunxinyi@gmail.com
-# Created:		2015-12-02 23:42:26 CST
-# Last-update:	2015-12-02 23:42:26 CST
-# Description: ANCHOR
+# Created:		2015-11-22 14:32:08 CST
+# Last-update:	2015-11-22 14:32:08 CST
+# Description:  The core functions of the shell-utils
 #
 # Version:		0.0.1
 # Revision:	[None]
@@ -38,12 +36,10 @@
 # ===============================================================
 #
 
-##! @desc: stack trace utility
-pstack() {
-	local i
-	printf -- '----------------stack trace-------------------\n'
-	for ((i = ${#FUNCNAME[@]}-1; i >= 0; --i)); do
-		printf "${FUNCNAME[$i]}\n"
+# show definition of given functions
+su::def() {
+	local f
+	for f; do
+		declare -f "$f"
 	done
-	printf '=====================end======================\n'
 }

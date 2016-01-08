@@ -14,7 +14,7 @@ This is Edition @value{EDITION}, last updated @value{UPDATED},
 of @cite{The Shell-Utils Reference Manual},
 for @code{shell-utils}, Version @value{VERSION}.
 
-Copyright @copyright{} 2015 Oxnz. All rights reserved.
+Copyright @copyright{} 2015-2016 Oxnz. All rights reserved.
 @end copying
 
 @titlepage

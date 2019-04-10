@@ -209,7 +209,7 @@ preinst() {
 	if [ -n "${ZSH_VERSION:-}" ]; then
 		emulate sh > /dev/null 2>&1 || true
 	else
-		case "$(set -o 2 > /dev/null)" in
+		case "$(set -o 2> /dev/null)" in
 			*posix*) :
 				set -o posix
 				;;

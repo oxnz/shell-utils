@@ -228,7 +228,7 @@ preinst() {
 			msgdump 'error' "sorry, ash is not supported for now"
 			return 1
 			;;
-		/bin/bash)
+		/bin/zsh|/bin/bash)
 			msgdump 'debug' "install for shell: [$SHELL]"
 			;;
 		/bin/sh)
@@ -372,7 +372,7 @@ uninst() {
 		name="$(basename "${src}")"
 		lnk="${HOME}/.${name}"
 		bkp="${DESTDIR}/var/bkp/${name}"
-		if ! dst="$(readlink -e "${lnk}")"; then
+		if ! dst="$(readlink "${lnk}")"; then
 			msgdump 'warning' "dangling symbol link found: [${lnk}]"
 		fi
 		if [ "${dst}" = "${src}" ]; then

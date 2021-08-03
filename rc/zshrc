@@ -21,7 +21,7 @@
 # ~/.zshrc
 #
 # Created: 2013-06-25 12:20:00
-# Last-update: 2014-11-03 15:50:55
+# Last-update: 2021-06-18 14:32:02
 # Version: 0.1
 # Author: Oxnz
 # License: Copyright (C) 2013 Oxnz
@@ -30,7 +30,7 @@
 # Skip all this for non-interactive shells
 [[ -z "$PS1" ]] && return
 
-if ! SHELL_UTILS_HOME="$(readlink -e "${(%):-%N}")"; then
+if ! SHELL_UTILS_HOME="$(readlink "${(%):-%N}")"; then
 	echo "readlink failed: ${BASH_SOURCE}" >&2
 	return 1
 fi
@@ -64,3 +64,5 @@ SU::initialize() {
 }
 SU::initialize
 unset -f SU::initialize
+
+export PATH="/Applications/CMake.app/Contents/bin":"$PATH"

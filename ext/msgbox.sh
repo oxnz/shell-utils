@@ -7,6 +7,8 @@
 # ref: http://www.fileformat.info/info/unicode/block/box_drawing/images.htm
 ################################################################################
 msgbox() {
+}
+return
 	local OPTIND=1
 	local opt
 	local width=${COLUMNS:-80}
@@ -200,17 +202,3 @@ END {
 	$linedump->("\N{U+2500}", "m", "\N{U+2514}", "\N{U+2518}", "\N{U+2500}");
 }'
 }
-
-# show banner
-banner() {
-	echo $'\e[32mKernel:\e[m '$(uname -r)
-	echo $'\e[33mUptime:\e[m '$(uptime)
-	if which sendmail > /dev/null 2>&1; then
-		echo $'\e[34mMail:\e[m '$(/usr/sbin/sendmail -bp 2>&1)
-	fi
-	echo $'\e[31mCrontab:\e[m'
-	echo $'\e[36mM H D m W command\e[m'
-	echo "$(crontab -l 2>&1)"
-}
-
-banner | msgbox -t "$(uname -a)" -f "Uptime:$(uptime)"

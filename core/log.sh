@@ -144,6 +144,7 @@ su::log::verbose() {
 ##! @api{log}
 ##! @desc{log function}
 su::log() {
+	return
 	if [ $# -ne 2 ]; then
 		echo "Usage: su::log level msg" >&2
 		return 1
